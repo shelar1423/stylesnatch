@@ -188,9 +188,9 @@ function Hero({
         transition={{ duration: 0.7, ease: "easeOut" }}
         className="mx-auto max-w-4xl text-center font-display text-[clamp(3rem,9vw,7.5rem)] leading-[0.9] tracking-tight"
       >
-        Steal any site&apos;s{" "}
+        Steal like an{" "}
         <span className="relative inline-block italic">
-          style
+          Artist
           <svg
             aria-hidden
             viewBox="0 0 300 20"
