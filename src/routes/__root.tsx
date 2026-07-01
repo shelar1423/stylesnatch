@@ -84,7 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Paste a URL. Get a portable SKILL.md that teaches Claude, Codex or any AI agent to replicate that site's visual style.",
       },
       { name: "author", content: "Stylesnatch" },
-      { property: "og:title", content: "Stylesnatch — Steal any website's style" },
+      { property: "og:title", content: "Stylesnatch — Turn any website into an AI style skill" },
       {
         property: "og:description",
         content:
@@ -93,6 +93,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Stylesnatch — Turn any website into an AI style skill" },
+      { name: "description", content: "AI Style Replicator scans websites and generates markdown files for AI agent skill replication." },
+      { property: "og:description", content: "AI Style Replicator scans websites and generates markdown files for AI agent skill replication." },
+      { name: "twitter:description", content: "AI Style Replicator scans websites and generates markdown files for AI agent skill replication." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/48b10696-6927-4036-a39b-52cba9b79d5f/id-preview-8906c0be--4741658d-0737-411d-9381-caad895bad62.lovable.app-1782909902732.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/48b10696-6927-4036-a39b-52cba9b79d5f/id-preview-8906c0be--4741658d-0737-411d-9381-caad895bad62.lovable.app-1782909902732.png" },
     ],
     links: [
       {
