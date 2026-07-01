@@ -59,29 +59,33 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --font-display: "Instrument Serif", ui-serif, Georgia, serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
+  --radius: 0.75rem;
+  /* Off-white paper background, ink foreground */
+  --background: oklch(0.977 0.006 95);
+  --foreground: oklch(0.18 0.01 60);
+  --card: oklch(0.995 0.003 95);
+  --card-foreground: oklch(0.18 0.01 60);
+  --popover: oklch(0.995 0.003 95);
+  --popover-foreground: oklch(0.18 0.01 60);
+  --primary: oklch(0.18 0.01 60);
+  --primary-foreground: oklch(0.98 0.005 95);
+  --secondary: oklch(0.94 0.012 90);
+  --secondary-foreground: oklch(0.2 0.01 60);
+  --muted: oklch(0.94 0.012 90);
+  --muted-foreground: oklch(0.48 0.015 70);
+  --accent: oklch(0.78 0.16 55); /* warm terracotta accent */
+  --accent-foreground: oklch(0.15 0.01 60);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  --border: oklch(0.88 0.012 85);
+  --input: oklch(0.9 0.012 85);
+  --ring: oklch(0.55 0.02 70);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -140,5 +144,88 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+  .font-mono {
+    font-family: var(--font-mono);
   }
 }
+
+/* SKILL.md markdown preview styling */
+.prose-style {
+  color: var(--color-foreground);
+  font-size: 14px;
+  line-height: 1.65;
+}
+.prose-style h1,
+.prose-style h2,
+.prose-style h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  color: var(--color-foreground);
+  margin-top: 1.75em;
+  margin-bottom: 0.5em;
+  line-height: 1.1;
+}
+.prose-style h1 { font-size: 2rem; }
+.prose-style h2 {
+  font-size: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.3em;
+}
+.prose-style h3 { font-size: 1.15rem; }
+.prose-style p { margin: 0.6em 0; }
+.prose-style ul,
+.prose-style ol { margin: 0.5em 0 0.75em 1.25em; }
+.prose-style li { margin: 0.2em 0; }
+.prose-style ul li { list-style: disc; }
+.prose-style ol li { list-style: decimal; }
+.prose-style code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: color-mix(in oklab, var(--color-foreground) 6%, transparent);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+.prose-style pre {
+  background: color-mix(in oklab, var(--color-foreground) 5%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  margin: 0.8em 0;
+}
+.prose-style pre code {
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+}
+.prose-style hr {
+  border: none;
+  border-top: 1px dashed var(--color-border);
+  margin: 1.5em 0;
+}
+.prose-style a {
+  color: var(--color-foreground);
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+.prose-style blockquote {
+  border-left: 3px solid var(--color-accent);
+  padding-left: 1em;
+  color: var(--color-muted-foreground);
+  margin: 0.8em 0;
+}
+.prose-style strong { font-weight: 600; }
