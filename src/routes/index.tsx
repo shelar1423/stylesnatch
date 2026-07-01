@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { AnimatePresence, motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
@@ -34,6 +34,8 @@ export const Route = createFileRoute("/")({
 function Index() {
   const [url, setUrl] = useState("");
   const [result, setResult] = useState<ScanResult | null>(null);
+  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
+  const resultSectionRef = useRef<HTMLDivElement | null>(null);
   const scan = useServerFn(scanSite);
 
   const mutation = useMutation({
@@ -43,11 +45,33 @@ function Index() {
     },
     onError: (err: unknown) => {
       const message = err instanceof Error ? err.message : "Something went wrong";
-      toast.error("Scan failed", { description: message });
+      // Detect our server-side cooldown marker
+      const match = message.match(/AI_RATE_LIMIT: Retry after (\d+)s/i);
+      const friendly = match
+        ? `Rate limit reached — try again in ${match[1]}s or check your OPENROUTER_API_KEY/quota.`
+        : /too many requests|rate limit|429/i.test(message)
+        ? "Rate limit reached from the AI provider (Too Many Requests). Try again in a minute or check your OPENROUTER_API_KEY/quota."
+        : message;
+      toast.error("Scan failed", { description: friendly });
+      if (match) {
+        const sec = Number(match[1]);
+        const until = Date.now() + sec * 1000;
+        setCooldownUntil(until);
+        setTimeout(() => setCooldownUntil(null), sec * 1000 + 500);
+      }
     },
   });
 
   const isScanning = mutation.isPending;
+  const isCooling = !!(cooldownUntil && Date.now() < cooldownUntil);
+
+  useEffect(() => {
+    if (!result) return;
+    const id = window.setTimeout(() => {
+      resultSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 180);
+    return () => window.clearTimeout(id);
+  }, [result]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,12 +94,14 @@ function Index() {
           setUrl={setUrl}
           onSubmit={submit}
           isScanning={isScanning}
+          isCooling={isCooling}
+          cooldownUntil={cooldownUntil}
         />
         <AnimatePresence mode="wait">
           {isScanning ? (
             <ScanningState key="scanning" url={url} />
           ) : result ? (
-            <ResultView key="result" result={result} />
+            <ResultView key="result" result={result} innerRef={resultSectionRef} />
           ) : (
             <HowItWorks key="how" />
           )}
@@ -112,6 +138,17 @@ function PaperTexture() {
 
 /* ---------------- Nav ---------------- */
 
+function scrollToSection(id: string) {
+  const element = document.getElementById(id);
+  if (!element) return;
+
+  const headerOffset = 96;
+  const elementPosition = element.getBoundingClientRect().top + window.scrollY - headerOffset;
+
+  window.scrollTo({ top: elementPosition, behavior: "smooth" });
+  window.history.replaceState(null, "", `#${id}`);
+}
+
 function Nav() {
   return (
     <motion.header
@@ -129,10 +166,24 @@ function Nav() {
         </span>
       </div>
       <nav className="hidden items-center gap-7 text-sm text-muted-foreground sm:flex">
-        <a href="#how" className="hover:text-foreground">
+        <a
+          href="#how"
+          onClick={(event) => {
+            event.preventDefault();
+            scrollToSection("how");
+          }}
+          className="hover:text-foreground"
+        >
           How it works
         </a>
-        <a href="#example" className="hover:text-foreground">
+        <a
+          href="#example"
+          onClick={(event) => {
+            event.preventDefault();
+            scrollToSection("example");
+          }}
+          className="hover:text-foreground"
+        >
           Example
         </a>
         <a
@@ -146,6 +197,10 @@ function Nav() {
       </nav>
       <a
         href="#scan"
+        onClick={(event) => {
+          event.preventDefault();
+          scrollToSection("scan");
+        }}
         className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-transform hover:scale-[1.02]"
       >
         Scan a site
@@ -161,14 +216,19 @@ function Hero({
   setUrl,
   onSubmit,
   isScanning,
+  isCooling,
+  cooldownUntil,
 }: {
   url: string;
   setUrl: (v: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   isScanning: boolean;
+  isCooling?: boolean;
+  cooldownUntil?: number | null;
 }) {
+  const cooldownRemaining = cooldownUntil ? Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000)) : 0;
   return (
-    <section id="scan" className="relative pt-14 pb-8 sm:pt-24">
+    <section id="scan" className="relative scroll-mt-24 pt-14 pb-8 sm:pt-24">
       <FloatingDecor />
 
       <motion.p
@@ -220,7 +280,7 @@ function Hero({
         AI agent can load — Claude Code, Codex, Cursor, whoever.
       </motion.p>
 
-      <motion.form
+        <motion.form
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.2 }}
@@ -235,13 +295,13 @@ function Hero({
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="linear.app"
-          disabled={isScanning}
+          disabled={isScanning || !!isCooling}
           className="min-w-0 flex-1 bg-transparent py-3 pr-2 font-mono text-base text-foreground placeholder:text-muted-foreground/60 focus:outline-none disabled:opacity-60"
           aria-label="Website URL"
         />
         <button
           type="submit"
-          disabled={isScanning}
+          disabled={isScanning || !!isCooling}
           className="group inline-flex items-center gap-2 rounded-xl bg-foreground px-4 py-3 text-sm font-medium text-background transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 sm:px-5"
         >
           {isScanning ? (
@@ -257,6 +317,17 @@ function Hero({
           )}
         </button>
       </motion.form>
+
+      {isCooling ? (
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4, duration: 0.4 }}
+          className="mx-auto mt-3 text-center text-sm text-muted-foreground"
+        >
+          Rate limit active — try again in {cooldownRemaining}s
+        </motion.p>
+      ) : null}
 
       <motion.p
         initial={{ opacity: 0 }}
@@ -339,7 +410,7 @@ function HowItWorks() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className="mt-24"
+      className="mt-24 scroll-mt-24"
     >
       <div className="mb-10 flex items-end justify-between">
         <h2 className="font-display text-4xl tracking-tight sm:text-5xl">
@@ -378,7 +449,7 @@ function HowItWorks() {
         })}
       </div>
 
-      <div id="example" className="mt-16 rounded-2xl border border-border/70 bg-card/70 p-8 backdrop-blur">
+      <div id="example" className="mt-16 scroll-mt-24 rounded-2xl border border-border/70 bg-card/70 p-8 backdrop-blur">
         <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-muted-foreground">
           <FileCode2 className="h-3.5 w-3.5" />
           example output
@@ -412,6 +483,18 @@ const SCAN_STEPS = [
 ];
 
 function ScanningState({ url }: { url: string }) {
+  const [currentStep, setCurrentStep] = useState(0);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setCurrentStep((prev) => (prev + 1) % SCAN_STEPS.length);
+    }, 1400);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const progress = ((currentStep + 1) / SCAN_STEPS.length) * 100;
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 20 }}
@@ -437,23 +520,46 @@ function ScanningState({ url }: { url: string }) {
             </div>
           </div>
         </div>
-        <ul className="mt-8 space-y-3">
-          {SCAN_STEPS.map((label, i) => (
-            <motion.li
-              key={label}
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.6, duration: 0.4 }}
-              className="flex items-center gap-3 text-sm text-foreground/80"
-            >
-              <motion.span
-                className="inline-block h-1.5 w-1.5 rounded-full bg-accent"
-                animate={{ scale: [1, 1.6, 1], opacity: [0.6, 1, 0.6] }}
-                transition={{ repeat: Infinity, duration: 1.4, delay: i * 0.2 }}
-              />
-              {label}
-            </motion.li>
-          ))}
+        <div className="mt-8 rounded-2xl border border-border/60 bg-background/60 p-4">
+          <div className="flex items-center justify-between text-sm text-foreground/80">
+            <span className="font-medium">Scan state</span>
+            <span className="font-mono text-xs text-muted-foreground">
+              {SCAN_STEPS[currentStep]}
+            </span>
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-foreground/10">
+            <motion.div
+              className="h-full rounded-full bg-accent"
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            />
+          </div>
+          <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+            <span>Preparing the scan</span>
+            <span>{Math.round(progress)}%</span>
+          </div>
+        </div>
+
+        <ul className="mt-6 space-y-3">
+          {SCAN_STEPS.map((label, i) => {
+            const isActive = i === currentStep;
+            return (
+              <motion.li
+                key={label}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.2, duration: 0.3 }}
+                className={`flex items-center gap-3 text-sm ${isActive ? "text-foreground" : "text-foreground/70"}`}
+              >
+                <motion.span
+                  className={`inline-block h-1.5 w-1.5 rounded-full ${isActive ? "bg-accent" : "bg-foreground/30"}`}
+                  animate={{ scale: isActive ? [1, 1.6, 1] : 1, opacity: isActive ? [0.6, 1, 0.6] : 1 }}
+                  transition={{ repeat: isActive ? Infinity : 0, duration: 1.4, delay: i * 0.1 }}
+                />
+                {label}
+              </motion.li>
+            );
+          })}
         </ul>
         <p className="mt-8 border-t border-border/60 pt-4 text-xs text-muted-foreground">
           Full site scans take ~20–40 seconds. Grab a coffee.
@@ -465,7 +571,7 @@ function ScanningState({ url }: { url: string }) {
 
 /* ---------------- Result view ---------------- */
 
-function ResultView({ result }: { result: ScanResult }) {
+function ResultView({ result, innerRef }: { result: ScanResult; innerRef: RefObject<HTMLDivElement | null> }) {
   const [copied, setCopied] = useState(false);
   const filename = useMemo(() => {
     try {
@@ -498,6 +604,7 @@ function ResultView({ result }: { result: ScanResult }) {
 
   return (
     <motion.section
+      ref={innerRef}
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
