@@ -5,13 +5,15 @@ const ScanInput = z.object({
   url: z.string().url(),
 });
 
+type Jsonish = string | number | boolean | null | Jsonish[] | { [k: string]: Jsonish };
+
 type BrandingPayload = {
   colors?: Record<string, string>;
   colorScheme?: string;
   fonts?: Array<{ family?: string }>;
-  typography?: Record<string, unknown>;
-  spacing?: Record<string, unknown>;
-  components?: Record<string, unknown>;
+  typography?: Jsonish;
+  spacing?: Jsonish;
+  components?: Jsonish;
   images?: Record<string, string>;
   logo?: string;
 };
@@ -98,7 +100,7 @@ export const scanSite = createServerFn({ method: "POST" })
       try {
         const batch = (await firecrawl.batchScrape(secondaryUrls, {
           options: { formats: ["markdown"], onlyMainContent: true },
-        })) as Record<string, unknown>;
+        })) as unknown as Record<string, unknown>;
         const items =
           (batch.data as Array<Record<string, unknown>> | undefined) ??
           (Array.isArray(batch) ? (batch as Array<Record<string, unknown>>) : []);
