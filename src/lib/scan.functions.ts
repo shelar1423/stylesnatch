@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 const ScanInput = z.object({
-  url: z.string().url(),
+  url: z.string().min(1),
 });
 
 type Jsonish = string | number | boolean | null | Jsonish[] | { [k: string]: Jsonish };
