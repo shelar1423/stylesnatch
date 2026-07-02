@@ -5,21 +5,57 @@ import { MessageSquare, X, Send, Linkedin, Instagram, Mail, Heart } from "lucide
 export function FeatureRequestBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleSend = () => {
-    if (!message.trim()) return;
+  const handleSend = async () => {
+    if (!message.trim() || isSending) return;
     
-    // Construct the mailto link
-    const email = "digvijayux@gmail.com";
-    const subject = encodeURIComponent("Stylesnatch Feature Request");
-    const body = encodeURIComponent(message);
+    // We look for a Web3Forms access key
+    const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
     
-    // Open the default email client
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-    
-    // Reset and close
-    setMessage("");
-    setIsOpen(false);
+    // If they haven't set up the API key yet, gracefully fallback to the local mail client
+    if (!accessKey) {
+      const email = "digvijayux@gmail.com";
+      const subject = encodeURIComponent("Stylesnatch Feature Request");
+      const body = encodeURIComponent(message);
+      window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+      setMessage("");
+      setIsOpen(false);
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          access_key: accessKey,
+          subject: "New Stylesnatch Feature Request!",
+          message: message,
+          from_name: "Stylesnatch App",
+        }),
+      });
+      
+      if (response.ok) {
+        setIsSuccess(true);
+        setTimeout(() => {
+          setIsSuccess(false);
+          setMessage("");
+          setIsOpen(false);
+        }, 2000);
+      } else {
+        alert("Failed to send request. Please try again.");
+      }
+    } catch (error) {
+      alert("Something went wrong. Check your connection.");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -59,11 +95,19 @@ export function FeatureRequestBot() {
               />
               <button
                 onClick={handleSend}
-                disabled={!message.trim()}
+                disabled={!message.trim() || isSending || isSuccess}
                 className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-foreground px-4 py-2.5 text-sm font-medium text-background transition-transform disabled:opacity-50 disabled:hover:scale-100 hover:scale-[1.02]"
               >
-                <Send className="h-4 w-4" />
-                Send Request
+                {isSending ? (
+                  <span className="flex items-center gap-2">Sending...</span>
+                ) : isSuccess ? (
+                  <span className="flex items-center gap-2 text-green-400">Sent successfully!</span>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Send Request
+                  </>
+                )}
               </button>
 
               <button
