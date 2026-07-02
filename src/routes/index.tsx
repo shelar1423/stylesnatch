@@ -26,6 +26,9 @@ import {
   Paintbrush,
   Camera,
   Github,
+  Linkedin,
+  Mail,
+  Instagram,
 } from "lucide-react";
 
 import { scanSite, type ScanResult } from "@/lib/scan.functions";
@@ -120,6 +123,7 @@ function Index() {
                 <HowItWorks />
                 <StealDivider />
                 <WhatWeCapture />
+                <PoweredBy />
               </div>
             </div>
           )}
@@ -214,6 +218,14 @@ function Nav() {
         >
           Example
         </a>
+        <a
+          href="https://github.com/shelar1423/stylesnatch#local-setup-instructions"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-foreground transition-colors"
+        >
+          Run Locally
+        </a>
       </nav>
       <a
         href="https://github.com/shelar1423/stylesnatch"
@@ -247,25 +259,31 @@ function Hero({
 }) {
   const cooldownRemaining = cooldownUntil ? Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000)) : 0;
   return (
-    <section id="scan" className="relative scroll-mt-24 pt-14 pb-8 sm:pt-24">
+    <section id="scan" className="relative scroll-mt-24 pt-6 pb-8 sm:pt-10">
       <FloatingDecor />
 
-      <motion.a
-        href="https://github.com/shelar1423/stylesnatch"
-        target="_blank"
-        rel="noopener noreferrer"
+      <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="animated-pill mx-auto mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-transparent bg-card/80 px-3.5 py-1.5 text-xs text-muted-foreground backdrop-blur hover:text-foreground transition-colors"
-        style={{ display: "flex" }}
+        className="mx-auto mb-8 flex max-w-md flex-col items-center gap-3 text-center"
       >
-        <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">Open Source</span>
-        <span className="flex items-center gap-1.5">
-          Star us on GitHub
-          <ArrowRight className="h-3 w-3" />
-        </span>
-      </motion.a>
+        <a
+          href="https://github.com/shelar1423/stylesnatch"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="animated-pill inline-flex w-fit items-center gap-2 rounded-full border border-transparent bg-card/80 px-3.5 py-1.5 text-xs text-muted-foreground backdrop-blur hover:text-foreground transition-colors"
+        >
+          <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">Open Source</span>
+          <span className="flex items-center gap-1.5">
+            Star us on GitHub
+            <ArrowRight className="h-3 w-3" />
+          </span>
+        </a>
+        <p className="text-[13px] leading-relaxed text-muted-foreground/80">
+          Clone the repo to use your own scraping service or a different LLM.
+        </p>
+      </motion.div>
 
       <motion.h1
         initial={{ opacity: 0, y: 20 }}
@@ -602,9 +620,6 @@ function HowItWorks() {
                   {step.body}
                 </p>
               </div>
-              {step.hasArrow && (
-                <ChevronRight className="mb-1 h-5 w-5 flex-shrink-0 text-muted-foreground/40" />
-              )}
             </div>
           </motion.div>
         ))}
@@ -989,6 +1004,45 @@ function ResultView({ result, innerRef }: { result: ScanResult; innerRef: RefObj
   );
 }
 
+/* ---------------- Powered By ---------------- */
+
+function PoweredBy() {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      className="relative mt-32 overflow-hidden rounded-[2rem] border border-border/40 bg-gradient-to-b from-card/80 to-background p-10 text-center shadow-2xl shadow-black/5 sm:p-16 backdrop-blur"
+    >
+      {/* Subtle background glow */}
+      <div className="pointer-events-none absolute inset-x-0 -top-24 mx-auto h-48 w-full max-w-md rounded-full bg-accent/15 blur-3xl" />
+      
+      <h2 className="relative font-display text-[clamp(2rem,5vw,3rem)] leading-tight tracking-tight">
+        Powered by the best. <br className="hidden sm:block" />
+        <span className="font-sans font-medium italic text-accent">Yours to modify.</span>
+      </h2>
+      <p className="relative mx-auto mt-6 max-w-2xl text-muted-foreground text-sm sm:text-base leading-relaxed">
+        Stylesnatch uses <strong className="text-foreground">Firecrawl</strong> to deeply scan website structure, and <strong className="text-foreground">Gemini 2.5 Flash</strong> (via OpenRouter) to distill that data into an elegant design system. 
+      </p>
+      
+      <div className="relative mt-10 flex flex-col items-center justify-center gap-5">
+        <a
+          href="https://github.com/shelar1423/stylesnatch#local-setup-instructions"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background transition-all hover:scale-[1.02] hover:bg-foreground/90 shadow-lg shadow-foreground/10"
+        >
+          <Github className="h-4 w-4 transition-transform group-hover:rotate-12" />
+          Set it up locally
+        </a>
+        <p className="text-xs text-muted-foreground/80 max-w-sm">
+          100% open source. Clone the repo to use your own scraping service or a different LLM.
+        </p>
+      </div>
+    </motion.section>
+  );
+}
+
 /* ---------------- Footer ---------------- */
 
 function Footer() {
@@ -1001,6 +1055,20 @@ function Footer() {
           </div>
           <div className="mt-1 text-sm text-muted-foreground">
             100% Open source. Built for prompt-engineers who love a good design system.
+          </div>
+          <div className="mt-6 flex items-center gap-4 text-muted-foreground">
+            <a href="https://www.linkedin.com/in/digvijayshelar/" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+              <Linkedin className="h-4 w-4" />
+              <span className="sr-only">LinkedIn</span>
+            </a>
+            <a href="mailto:digvijayux@gmail.com" className="hover:text-foreground transition-colors">
+              <Mail className="h-4 w-4" />
+              <span className="sr-only">Email</span>
+            </a>
+            <a href="https://instagram.com/digvijayux" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+              <Instagram className="h-4 w-4" />
+              <span className="sr-only">Instagram</span>
+            </a>
           </div>
         </div>
         <div className="flex items-center gap-6 text-xs font-mono text-muted-foreground">
