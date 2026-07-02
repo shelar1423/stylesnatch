@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 
 import { Toaster } from "@/components/ui/sonner";
+import { Nav } from "@/components/Nav";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -95,104 +96,6 @@ function PaperTexture() {
   );
 }
 
-/* ---------------- Nav ---------------- */
-
-function scrollToSection(id: string) {
-  const element = document.getElementById(id);
-  if (!element) return;
-
-  const headerOffset = 96;
-  const elementPosition = element.getBoundingClientRect().top + window.scrollY - headerOffset;
-
-  window.scrollTo({ top: elementPosition, behavior: "smooth" });
-  window.history.replaceState(null, "", `#${id}`);
-}
-
-function Nav() {
-  const handleNavClick = (id: string, e?: React.MouseEvent) => {
-    if (e) e.preventDefault();
-    setTimeout(() => scrollToSection(id), 50);
-  };
-
-  return (
-    <motion.header
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      className="sticky top-4 z-30 mx-auto mt-4 flex max-w-6xl items-center justify-between rounded-full border border-border/70 bg-card/80 px-5 py-2.5 shadow-[0_1px_0_oklch(1_0_0_/_0.6)_inset,0_10px_30px_-15px_oklch(0.2_0.02_60_/_0.15)] backdrop-blur-md sm:px-6"
-    >
-      <button 
-        onClick={() => {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }}
-        className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-      >
-        <div className="grid h-7 w-7 place-items-center rounded-md bg-foreground text-background">
-          <Wand2 className="h-4 w-4" />
-        </div>
-        <span className="font-display text-xl leading-none tracking-tight">
-          Stylesnatch
-        </span>
-      </button>
-      <nav className="hidden items-center gap-7 text-sm text-muted-foreground sm:flex">
-        <a
-          href="#how"
-          onClick={(e) => handleNavClick("how", e)}
-          className="hover:text-foreground transition-colors"
-        >
-          How it works
-        </a>
-        <a
-          href="#features"
-          onClick={(e) => handleNavClick("features", e)}
-          className="hover:text-foreground transition-colors"
-        >
-          Features
-        </a>
-        <a
-          href="#example"
-          onClick={(e) => handleNavClick("example", e)}
-          className="hover:text-foreground transition-colors"
-        >
-          Example
-        </a>
-        <a
-          href="https://github.com/shelar1423/stylesnatch#local-setup-instructions"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:text-foreground transition-colors"
-        >
-          Run Locally
-        </a>
-      </nav>
-      <div className="flex items-center gap-4">
-        <div className="hidden items-center gap-3 text-muted-foreground sm:flex border-r border-border/60 pr-4">
-          <a href="https://www.linkedin.com/in/digvijayshelar/" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
-            <Linkedin className="h-4 w-4" />
-            <span className="sr-only">LinkedIn</span>
-          </a>
-          <a href="mailto:digvijayux@gmail.com" className="hover:text-foreground transition-colors">
-            <Mail className="h-4 w-4" />
-            <span className="sr-only">Email</span>
-          </a>
-          <a href="https://instagram.com/digvijayux" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
-            <Instagram className="h-4 w-4" />
-            <span className="sr-only">Instagram</span>
-          </a>
-        </div>
-        <a
-          href="https://github.com/shelar1423/stylesnatch"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-transform hover:scale-[1.02]"
-        >
-          <Github className="h-3.5 w-3.5" />
-          Star repo
-        </a>
-      </div>
-    </motion.header>
-  );
-}
 
 /* ---------------- Hero ---------------- */
 

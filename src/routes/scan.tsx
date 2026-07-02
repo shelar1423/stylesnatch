@@ -33,6 +33,7 @@ import {
 
 import { scanSite, type ScanResult } from "@/lib/scan.functions";
 import { Toaster } from "@/components/ui/sonner";
+import { Nav } from "@/components/Nav";
 
 export const Route = createFileRoute("/scan")({
   component: ScanPage,
@@ -87,24 +88,7 @@ function ScanPage() {
     <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
       <Toaster position="top-center" richColors />
       <PaperTexture />
-      <motion.header
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="sticky top-4 z-30 mx-auto mt-4 flex max-w-6xl items-center justify-between rounded-full border border-border/70 bg-card/80 px-5 py-2.5 shadow-[0_1px_0_oklch(1_0_0_/_0.6)_inset,0_10px_30px_-15px_oklch(0.2_0.02_60_/_0.15)] backdrop-blur-md sm:px-6"
-      >
-        <button 
-          onClick={() => navigate({ to: "/" })}
-          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-        >
-          <div className="grid h-7 w-7 place-items-center rounded-md bg-foreground text-background">
-            <Wand2 className="h-4 w-4" />
-          </div>
-          <span className="font-display text-xl leading-none tracking-tight">
-            Stylesnatch
-          </span>
-        </button>
-      </motion.header>
+      <Nav />
       <main className="relative pt-12 pb-24">
         <AnimatePresence mode="wait">
           {isScanning || (!result && !isScanning) ? (
