@@ -275,7 +275,7 @@ function Hero({
 }) {
   const cooldownRemaining = cooldownUntil ? Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000)) : 0;
   return (
-    <section id="scan" className="relative scroll-mt-24 pt-2 pb-8 sm:pt-6">
+    <section id="scan" className="relative scroll-mt-24 pt-0 pb-8 sm:pt-2">
       <FloatingDecor />
 
       <motion.div
@@ -416,11 +416,15 @@ function Hero({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6, duration: 0.6 }}
-        className="mx-auto mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground"
+        className="mx-auto mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground"
       >
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
           No signup needed
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Sparkles className="h-3 w-3 text-accent" />
+          Powered by Gemini 2.5 Flash
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
