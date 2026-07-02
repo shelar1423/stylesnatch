@@ -275,14 +275,14 @@ function Hero({
 }) {
   const cooldownRemaining = cooldownUntil ? Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000)) : 0;
   return (
-    <section id="scan" className="relative scroll-mt-24 pt-6 pb-8 sm:pt-10">
+    <section id="scan" className="relative scroll-mt-24 pt-2 pb-8 sm:pt-6">
       <FloatingDecor />
 
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="mx-auto mb-8 flex max-w-md flex-col items-center gap-3 text-center"
+        className="mx-auto mb-5 flex max-w-md flex-col items-center gap-2 text-center"
       >
         <motion.a
           href="https://github.com/shelar1423/stylesnatch"
@@ -335,7 +335,7 @@ function Hero({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.1 }}
-        className="mx-auto mt-6 max-w-xl text-center text-base leading-relaxed text-muted-foreground sm:text-lg"
+        className="mx-auto mt-4 max-w-xl text-center text-base leading-relaxed text-muted-foreground sm:text-lg"
       >
         Paste a URL. We extract its typography, color, spacing,
         components and motion — then hand you a markdown
@@ -347,7 +347,7 @@ function Hero({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.2 }}
         onSubmit={onSubmit}
-        className="relative mx-auto mt-10 flex w-full max-w-2xl items-center gap-2 rounded-2xl border border-border/80 bg-card/90 p-2 shadow-[0_1px_0_oklch(1_0_0_/_0.7)_inset,0_20px_50px_-25px_oklch(0.2_0.02_60_/_0.35)] backdrop-blur"
+        className="relative mx-auto mt-6 flex w-full max-w-2xl items-center gap-2 rounded-2xl border border-border/80 bg-card/90 p-2 shadow-[0_1px_0_oklch(1_0_0_/_0.7)_inset,0_20px_50px_-25px_oklch(0.2_0.02_60_/_0.35)] backdrop-blur"
       >
         <div className="pl-3 pr-1 text-muted-foreground">
           <span className="font-mono text-sm">https://</span>
