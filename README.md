@@ -13,63 +13,67 @@ Stylesnatch is an elegant web application built for prompt-engineers and AI agen
 ## Prerequisites
 
 Before running the project locally, ensure you have the following installed:
-- [Node.js](https://nodejs.org/en/) (v18+)
-- [Bun](https://bun.sh/) (recommended) or npm/yarn/pnpm
+- [Node.js](https://nodejs.org/en/download/) (v18 or higher)
+- **npm** (comes installed automatically with Node.js)
 
-You will also need API keys for the following services:
-1. **Firecrawl**: For deeply scraping and extracting color/typography data from websites. Get a key at [Firecrawl](https://firecrawl.dev/).
-2. **OpenRouter**: For processing the scraped data into an agent-ready markdown skill. Get a key at [OpenRouter](https://openrouter.ai/).
+You will also need API keys for the following services to make the app work:
+1. **Firecrawl API Key**: For deeply scraping and extracting color/typography data from websites. Get a free key at [Firecrawl](https://firecrawl.dev/).
+2. **OpenRouter API Key**: For processing the scraped data into an agent-ready markdown skill using AI. Get a free key at [OpenRouter](https://openrouter.ai/).
 
-## Local Setup Instructions
+## Local Setup Instructions (Step-by-Step)
 
-1. **Clone the repository** (if you haven't already):
-   ```bash
-   git clone https://github.com/shelar1423/stylesnatch.git
-   cd stylesnatch
-   ```
+Follow these exact steps to get the app running on your computer.
 
-2. **Install dependencies**:
-   ```bash
-   bun install
-   # or: npm install
-   ```
+### Step 1: Clone the repository
+First, download the code to your local machine using git.
+```bash
+git clone https://github.com/shelar1423/stylesnatch.git
+cd stylesnatch
+```
 
-3. **Configure Environment Variables**:
-   Copy the provided example environment file to create your local `.env`:
+### Step 2: Install dependencies
+Next, install all the required packages using npm. This might take a minute or two.
+```bash
+npm install
+```
+
+### Step 3: Configure Environment Variables
+The app needs your API keys to function. We'll set these up using an environment file.
+
+1. Create a copy of the example environment file:
    ```bash
    cp .env.example .env
    ```
-   Open the `.env` file in your editor and add your API keys:
+2. Open the newly created `.env` file in your code editor.
+3. Replace the placeholder text with your actual API keys:
    ```env
-   FIRECRAWL_API_KEY=your_firecrawl_key_here
-   OPENROUTER_API_KEY=your_openrouter_key_here
-   OPENROUTER_MODEL=google/gemini-2.5-flash # or your preferred model
+   FIRECRAWL_API_KEY=your_actual_firecrawl_key_here
+   OPENROUTER_API_KEY=your_actual_openrouter_key_here
+   OPENROUTER_MODEL=google/gemini-2.5-flash
    ```
 
-4. **Run the Development Server**:
-   ```bash
-   bun run dev
-   # or: npm run dev
-   ```
-   The application will be available at `http://localhost:8081` (or the port specified in your console).
+### Step 4: Run the Development Server
+Finally, start the local server to run the app.
+```bash
+npm run dev
+```
+Once the server starts, open your browser and go to the link shown in your terminal (usually `http://localhost:8080`).
 
-## Usage
+## Usage Guide
 
 1. Open the local site in your browser.
-2. Enter the URL of any beautifully designed website you admire in the main hero input.
-3. Click "Start a scan". The tool will fetch the homepage, read the colors, typography, and spacing.
+2. Enter the URL of any beautifully designed website you admire in the main input field.
+3. Click **Scan style**. The tool will fetch the homepage, read the colors, typography, and spacing.
 4. Once completed, download or copy the generated `SKILL.md`.
 5. Drop this markdown file into your AI coding assistant (like Cursor, Windsurf, or Copilot) to give your agent a refined design taste.
 
 ## Building for Production
 
-To create a production build:
+When you're ready to deploy the app, create a production build:
 ```bash
-bun run build
-# or: npm run build
+npm run build
 ```
-You can then preview the production build using:
+You can preview the built production app locally using:
 ```bash
-bun run preview
-# or: npm run preview
+npm run preview
 ```
