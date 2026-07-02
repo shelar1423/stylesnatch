@@ -655,6 +655,18 @@ function Footer() {
           <div className="mt-1 text-sm text-muted-foreground">
             100% Open source. Built for prompt-engineers who love a good design system.
           </div>
+          <div className="mt-4 text-sm text-muted-foreground">
+            Made by{" "}
+            <a
+              href="https://digvijayux.framer.website/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-foreground/80 underline decoration-accent/40 underline-offset-2 transition-colors hover:text-foreground hover:decoration-accent"
+            >
+              Digvijay Shelar
+            </a>
+            {" "}— developer turned UX designer, building tools at the intersection of design and AI.
+          </div>
           <div className="mt-6 flex items-center gap-4 text-muted-foreground">
             <a href="https://www.linkedin.com/in/digvijayshelar/" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
               <Linkedin className="h-4 w-4" />
