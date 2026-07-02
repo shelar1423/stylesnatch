@@ -3,28 +3,20 @@ import { motion, AnimatePresence } from "motion/react";
 import { MessageSquare, X, Send, Linkedin, Instagram, Mail, Heart } from "lucide-react";
 
 export function FeatureRequestBot() {
+  const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
+  
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  // If the API key isn't set (e.g. for people cloning the open-source repo), 
+  // we completely hide the widget.
+  if (!accessKey) return null;
+
   const handleSend = async () => {
     if (!message.trim() || isSending) return;
     
-    // We look for a Web3Forms access key
-    const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
-    
-    // If they haven't set up the API key yet, gracefully fallback to the local mail client
-    if (!accessKey) {
-      const email = "digvijayux@gmail.com";
-      const subject = encodeURIComponent("Stylesnatch Feature Request");
-      const body = encodeURIComponent(message);
-      window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-      setMessage("");
-      setIsOpen(false);
-      return;
-    }
-
     setIsSending(true);
     try {
       const response = await fetch("https://api.web3forms.com/submit", {
