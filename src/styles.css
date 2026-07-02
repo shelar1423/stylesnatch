@@ -79,7 +79,7 @@
   --secondary-foreground: oklch(0.2 0.01 60);
   --muted: oklch(0.94 0.012 90);
   --muted-foreground: oklch(0.48 0.015 70);
-  --accent: oklch(0.78 0.16 55); /* warm terracotta accent */
+  --accent: oklch(0.55 0.12 270); /* muted indigo accent matching screenshots */
   --accent-foreground: oklch(0.15 0.01 60);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
@@ -161,6 +161,138 @@
   .font-mono {
     font-family: var(--font-mono);
   }
+}
+
+/* ---- Animated gradient border for hero pill ---- */
+@keyframes gradient-rotate {
+  0% { --gradient-angle: 0deg; }
+  100% { --gradient-angle: 360deg; }
+}
+@property --gradient-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+.animated-pill {
+  position: relative;
+  isolation: isolate;
+}
+.animated-pill::before {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--gradient-angle),
+    oklch(0.55 0.12 270),
+    oklch(0.7 0.15 300),
+    oklch(0.6 0.1 200),
+    oklch(0.75 0.12 150),
+    oklch(0.55 0.12 270)
+  );
+  z-index: -1;
+  animation: gradient-rotate 4s linear infinite;
+  opacity: 0.7;
+}
+.animated-pill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--card, white);
+  z-index: -1;
+}
+
+/* ---- Marquee animation ---- */
+@keyframes marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 35s linear infinite;
+}
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+/* ---- Marquee logo styles ---- */
+.marquee-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+.marquee-logo svg {
+  flex-shrink: 0;
+}
+
+/* ---- Steal like an artist divider ---- */
+.steal-divider {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 2rem 0;
+}
+.steal-divider::before,
+.steal-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    to var(--dir, right),
+    transparent,
+    var(--color-border) 20%,
+    var(--color-border) 80%,
+    transparent
+  );
+}
+.steal-divider::after {
+  --dir: left;
+}
+
+/* ---- Floating decoration cards ---- */
+.deco-card {
+  position: relative;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: oklch(0.45 0.01 60);
+  pointer-events: none;
+  z-index: 5;
+  white-space: nowrap;
+}
+.deco-card-icon {
+  position: relative;
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* ---- Feature card gradient backgrounds ---- */
+.feature-card-blue {
+  background: linear-gradient(160deg, rgba(240,242,255,0.7) 0%, rgba(255,255,255,0.9) 100%);
+}
+.feature-card-green {
+  background: linear-gradient(160deg, rgba(236,255,242,0.7) 0%, rgba(255,255,255,0.9) 100%);
+}
+.feature-card-red {
+  background: linear-gradient(160deg, rgba(255,240,240,0.7) 0%, rgba(255,255,255,0.9) 100%);
+}
+.feature-card-yellow {
+  background: linear-gradient(160deg, rgba(255,250,230,0.7) 0%, rgba(255,255,255,0.9) 100%);
 }
 
 /* SKILL.md markdown preview styling */

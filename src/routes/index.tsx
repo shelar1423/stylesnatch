@@ -17,17 +17,22 @@ import {
   Palette,
   Type,
   Check,
+  Grid3X3,
+  Zap,
+  ChevronRight,
+  Eye,
+  FileText,
+  Globe,
+  Paintbrush,
+  Camera,
+  Github,
 } from "lucide-react";
 
 import { scanSite, type ScanResult } from "@/lib/scan.functions";
 import { Toaster } from "@/components/ui/sonner";
 
-import decoClip from "@/assets/deco-clip.png";
-import decoPaperclip from "@/assets/deco-paperclip.png";
-import decoPaper from "@/assets/deco-paper.png";
-import decoChip from "@/assets/deco-chip.png";
-
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/")(
+  {
   component: Index,
 });
 
@@ -88,22 +93,35 @@ function Index() {
       <Toaster position="top-center" richColors />
       <PaperTexture />
       <Nav />
-      <main className="relative mx-auto max-w-6xl px-6 pt-24 pb-40 sm:px-8">
-        <Hero
-          url={url}
-          setUrl={setUrl}
-          onSubmit={submit}
-          isScanning={isScanning}
-          isCooling={isCooling}
-          cooldownUntil={cooldownUntil}
-        />
+      <main className="relative">
+        <div className="mx-auto max-w-6xl px-6 pt-12 sm:px-8">
+          <Hero
+            url={url}
+            setUrl={setUrl}
+            onSubmit={submit}
+            isScanning={isScanning}
+            isCooling={isCooling}
+            cooldownUntil={cooldownUntil}
+          />
+        </div>
         <AnimatePresence mode="wait">
           {isScanning ? (
-            <ScanningState key="scanning" url={url} />
+            <div className="mx-auto max-w-6xl px-6 sm:px-8">
+              <ScanningState key="scanning" url={url} />
+            </div>
           ) : result ? (
-            <ResultView key="result" result={result} innerRef={resultSectionRef} />
+            <div className="mx-auto max-w-6xl px-6 sm:px-8">
+              <ResultView key="result" result={result} innerRef={resultSectionRef} />
+            </div>
           ) : (
-            <HowItWorks key="how" />
+            <div key="landing-sections">
+              <Marquee />
+              <div className="mx-auto max-w-6xl px-6 pb-24 sm:px-8">
+                <HowItWorks />
+                <StealDivider />
+                <WhatWeCapture />
+              </div>
+            </div>
           )}
         </AnimatePresence>
       </main>
@@ -172,9 +190,19 @@ function Nav() {
             event.preventDefault();
             scrollToSection("how");
           }}
-          className="hover:text-foreground"
+          className="hover:text-foreground transition-colors"
         >
           How it works
+        </a>
+        <a
+          href="#features"
+          onClick={(event) => {
+            event.preventDefault();
+            scrollToSection("features");
+          }}
+          className="hover:text-foreground transition-colors"
+        >
+          Features
         </a>
         <a
           href="#example"
@@ -182,28 +210,19 @@ function Nav() {
             event.preventDefault();
             scrollToSection("example");
           }}
-          className="hover:text-foreground"
+          className="hover:text-foreground transition-colors"
         >
           Example
         </a>
-        <a
-          href="https://docs.anthropic.com/en/docs/claude-code/skills"
-          target="_blank"
-          rel="noreferrer"
-          className="hover:text-foreground"
-        >
-          Skills 101
-        </a>
       </nav>
       <a
-        href="#scan"
-        onClick={(event) => {
-          event.preventDefault();
-          scrollToSection("scan");
-        }}
-        className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-transform hover:scale-[1.02]"
+        href="https://github.com/shelar1423/stylesnatch"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-transform hover:scale-[1.02]"
       >
-        Scan a site
+        <Github className="h-3.5 w-3.5" />
+        Star repo
       </a>
     </motion.header>
   );
@@ -231,30 +250,36 @@ function Hero({
     <section id="scan" className="relative scroll-mt-24 pt-14 pb-8 sm:pt-24">
       <FloatingDecor />
 
-      <motion.p
+      <motion.a
+        href="https://github.com/shelar1423/stylesnatch"
+        target="_blank"
+        rel="noopener noreferrer"
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="mx-auto mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-border/70 bg-card/80 px-3 py-1 text-xs text-muted-foreground backdrop-blur"
+        className="animated-pill mx-auto mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-transparent bg-card/80 px-3.5 py-1.5 text-xs text-muted-foreground backdrop-blur hover:text-foreground transition-colors"
         style={{ display: "flex" }}
       >
-        <Sparkles className="h-3.5 w-3.5 text-accent" />
-        Turn any website into an AI-agent skill
-      </motion.p>
+        <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">Open Source</span>
+        <span className="flex items-center gap-1.5">
+          Star us on GitHub
+          <ArrowRight className="h-3 w-3" />
+        </span>
+      </motion.a>
 
       <motion.h1
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: "easeOut" }}
-        className="mx-auto max-w-4xl text-center font-display text-[clamp(3rem,9vw,7.5rem)] leading-[0.9] tracking-tight"
+        className="mx-auto max-w-4xl text-center font-display text-[clamp(2.8rem,8vw,6rem)] leading-[0.95] tracking-tight"
       >
-        Steal like an{" "}
-        <span className="relative inline-block italic">
-          Artist
+        Turn any website into a{" "}
+        <span className="relative inline-block font-sans font-medium italic text-accent">
+          skill
           <svg
             aria-hidden
             viewBox="0 0 300 20"
-            className="absolute -bottom-2 left-0 h-3 w-full text-accent"
+            className="absolute -bottom-1 left-0 h-2.5 w-full text-accent/40"
             preserveAspectRatio="none"
           >
             <path
@@ -265,8 +290,8 @@ function Hero({
               strokeLinecap="round"
             />
           </svg>
-        </span>
-        .
+        </span>{" "}
+        your AI can wear.
       </motion.h1>
 
       <motion.p
@@ -275,9 +300,9 @@ function Hero({
         transition={{ duration: 0.7, delay: 0.1 }}
         className="mx-auto mt-6 max-w-xl text-center text-base leading-relaxed text-muted-foreground sm:text-lg"
       >
-        Paste a URL. We scan the colors, type, spacing and vibe, then hand you a
-        portable <span className="font-mono text-foreground">SKILL.md</span> your
-        AI agent can load — Claude Code, Codex, Cursor, whoever.
+        Paste a URL. We extract its typography, color, spacing,
+        components and motion — then hand you a markdown
+        file your agent can read to design in that style.
       </motion.p>
 
         <motion.form
@@ -311,7 +336,7 @@ function Hero({
             </>
           ) : (
             <>
-              Snatch style
+              Scan style
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </>
           )}
@@ -336,7 +361,7 @@ function Hero({
         className="mx-auto mt-4 text-center text-xs text-muted-foreground"
       >
         Try{" "}
-        {["linear.app", "stripe.com", "vercel.com", "acctual.com"].map((s, i, arr) => (
+        {["linear.app", "stripe.com", "vercel.com", "framer.com"].map((s, i, arr) => (
           <button
             key={s}
             type="button"
@@ -348,37 +373,161 @@ function Hero({
           </button>
         ))}
       </motion.p>
+
+      {/* Trust badges */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.6 }}
+        className="mx-auto mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground"
+      >
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          No signup needed
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
+          20-40s per scan
+        </span>
+      </motion.div>
     </section>
   );
 }
 
-/* ---------------- Floating decor ---------------- */
+/* ---------------- Floating decoration cards ---------------- */
+
+function FloatingElement({
+  className,
+  style,
+  delay,
+  rotate = 0,
+  children,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+  delay: number;
+  rotate?: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.9, rotate }}
+      animate={{ opacity: 1, y: 0, scale: 1, rotate }}
+      transition={{ delay, duration: 0.8, ease: "easeOut" }}
+      className="absolute"
+      style={style}
+    >
+      <motion.div
+        animate={{ y: [-5, 5, -5] }}
+        transition={{ repeat: Infinity, duration: 4 + (delay % 2), ease: "easeInOut", delay: delay + 0.8 }}
+        whileHover={{ scale: 1.05, y: -5 }}
+        whileTap={{ scale: 0.95 }}
+        className={`pointer-events-auto ${className || ""}`}
+      >
+        {children}
+      </motion.div>
+    </motion.div>
+  );
+}
 
 function FloatingDecor() {
-  const items = useMemo(
-    () => [
-      { src: decoClip, alt: "", className: "left-[-40px] top-[10px] w-28 sm:w-32 -rotate-12", delay: 0 },
-      { src: decoPaper, alt: "", className: "right-[-30px] top-[40px] w-28 sm:w-36 rotate-6", delay: 0.15 },
-      { src: decoChip, alt: "", className: "left-[8%] bottom-[-30px] w-16 sm:w-20 -rotate-6", delay: 0.3 },
-      { src: decoPaperclip, alt: "", className: "right-[10%] bottom-[-10px] w-16 sm:w-20 rotate-12", delay: 0.45 },
-    ],
-    [],
-  );
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0">
-      {items.map((it, i) => (
-        <motion.img
-          key={i}
-          src={it.src}
-          alt={it.alt}
-          initial={{ opacity: 0, y: 20, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ delay: 0.2 + it.delay, duration: 0.8, ease: "easeOut" }}
-          className={`absolute drop-shadow-[0_12px_18px_oklch(0.2_0.02_60_/_0.18)] ${it.className}`}
-          style={{ willChange: "transform" }}
-        />
-      ))}
+    <div aria-hidden className="pointer-events-none absolute inset-0 hidden lg:block">
+      {/* Left side elements */}
+      <FloatingElement delay={0.3} rotate={-15} className="deco-card-icon" style={{ left: '-12%', top: '5%' }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'oklch(0.5 0.02 260)' }}>
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </FloatingElement>
+
+      <FloatingElement delay={0.45} rotate={10} className="deco-card-icon" style={{ left: '-18%', top: '28%' }}>
+        <Grid3X3 className="h-5 w-5" style={{ color: 'oklch(0.4 0.02 260)' }} />
+      </FloatingElement>
+
+      <FloatingElement delay={0.6} rotate={-6} className="deco-card" style={{ left: '-10%', top: '52%' }}>
+        <div className="flex items-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M2 12 C 4 12, 10 2, 12 2" stroke="oklch(0.5 0.15 170)" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <span style={{ fontSize: '11px' }}>easing · cubic-bezier</span>
+        </div>
+      </FloatingElement>
+
+      <FloatingElement delay={0.65} rotate={-5} className="deco-card-icon flex items-center justify-center" style={{ left: '-15%', top: '75%', width: '40px', height: '40px' }}>
+        <div className="h-4 w-4 rounded-full" style={{ backgroundColor: '#E5484D' }} />
+      </FloatingElement>
+
+      <FloatingElement delay={0.7} rotate={8} className="deco-card" style={{ left: '-5%', top: '95%' }}>
+        <div className="flex items-center gap-2">
+          <div className="h-5 w-5 rounded-md" style={{ backgroundColor: '#1a1a1a' }} />
+          <div>
+            <div style={{ fontSize: '10px', color: '#999' }}>#1A1A1A</div>
+            <div style={{ fontWeight: 600, fontSize: '11px' }}>ink</div>
+          </div>
+        </div>
+      </FloatingElement>
+
+      {/* Right side elements */}
+      <FloatingElement delay={0.4} rotate={4} className="deco-card" style={{ right: '-12%', top: '10%' }}>
+        <div className="flex items-center gap-2">
+          <div className="h-6 w-6 rounded-md" style={{ backgroundColor: '#5E6AD2' }} />
+          <div>
+            <div style={{ fontSize: '10px', color: '#999' }}>#5E6AD2</div>
+            <div style={{ fontWeight: 600, fontSize: '11px' }}>primary</div>
+          </div>
+        </div>
+      </FloatingElement>
+
+      <FloatingElement delay={0.5} rotate={-10} className="deco-card-icon" style={{ right: '-18%', top: '32%' }}>
+        <Type className="h-5 w-5" style={{ color: 'oklch(0.3 0.01 60)' }} />
+      </FloatingElement>
+
+      <FloatingElement delay={0.5} rotate={15} className="deco-card-icon flex items-center justify-center" style={{ right: '-10%', top: '55%', width: '36px', height: '36px' }}>
+        <Zap className="h-4 w-4" style={{ color: 'oklch(0.55 0.12 270)' }} />
+      </FloatingElement>
+
+      <FloatingElement delay={0.55} rotate={-4} className="deco-card" style={{ right: '-15%', top: '78%' }}>
+        <span style={{ fontSize: '11px' }}>Card · radius 16</span>
+      </FloatingElement>
+
+      <FloatingElement delay={0.75} rotate={5} className="deco-card-icon flex items-center justify-center" style={{ right: '-5%', top: '98%', width: '44px', height: '44px' }}>
+        <Sparkles className="h-5 w-5" style={{ color: '#E5A100' }} />
+      </FloatingElement>
     </div>
+  );
+}
+
+/* ---------------- Marquee of compatible agents ---------------- */
+
+const MARQUEE_AGENTS = ["OpenAI Codex", "Claude Code", "Cursor", "GitHub Copilot", "Gemini CLI", "Google Antigravity", "Windsurf", "Roo Code"];
+
+function Marquee() {
+  const doubled = [...MARQUEE_AGENTS, ...MARQUEE_AGENTS];
+  return (
+    <motion.section
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6 }}
+      className="mt-16 overflow-hidden border-t border-b border-border/50 py-8"
+    >
+      <p className="mb-6 text-center text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground">
+        Works beautifully with
+      </p>
+      <div className="relative overflow-hidden">
+        <div className="marquee-track gap-14">
+          {doubled.map((name, i) => (
+            <div
+              key={`${name}-${i}`}
+              className="text-xl font-bold tracking-tight text-muted-foreground/40 sm:text-2xl"
+            >
+              {name}
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.section>
   );
 }
 
@@ -386,19 +535,22 @@ function FloatingDecor() {
 
 const STEPS = [
   {
-    icon: Palette,
-    title: "Scan",
-    body: "We crawl the site, pull the palette, typography, spacing, components and screenshots.",
+    num: "01",
+    title: "Paste a URL",
+    body: "Any public site. We handle the rest.",
+    hasArrow: true,
   },
   {
-    icon: Type,
-    title: "Distill",
-    body: "AI turns the raw signal into concrete design tokens and copy-pasteable rules.",
+    num: "02",
+    title: "AI scans the surface",
+    body: "HTML, CSS and a rendered screenshot are analyzed together.",
+    hasArrow: true,
   },
   {
-    icon: FileCode2,
-    title: "Ship",
-    body: "You get a SKILL.md — drop it into Claude, Codex or Cursor as a portable style skill.",
+    num: "03",
+    title: "Download the skill",
+    body: "A single markdown file, ready for your favorite agent.",
+    hasArrow: false,
   },
 ];
 
@@ -407,48 +559,58 @@ function HowItWorks() {
     <motion.section
       id="how"
       initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
-      className="mt-24 scroll-mt-24"
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.6 }}
+      className="mt-12 scroll-mt-24"
     >
-      <div className="mb-10 flex items-end justify-between">
-        <h2 className="font-display text-4xl tracking-tight sm:text-5xl">
-          How it works
-        </h2>
-        <span className="hidden font-mono text-xs uppercase tracking-widest text-muted-foreground sm:block">
-          three steps
-        </span>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-3">
-        {STEPS.map((step, i) => {
-          const Icon = step.icon;
-          return (
-            <motion.div
-              key={step.title}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.5, delay: i * 0.08 }}
-              className="group relative overflow-hidden rounded-2xl border border-border/80 bg-card/80 p-6 backdrop-blur transition-transform hover:-translate-y-1"
-            >
-              <div className="mb-6 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-foreground text-background">
-                <Icon className="h-4 w-4" />
-              </div>
-              <div className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                Step {i + 1}
-              </div>
-              <h3 className="mt-1 font-display text-3xl tracking-tight">
-                {step.title}
-              </h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                {step.body}
-              </p>
-            </motion.div>
-          );
-        })}
+      <div className="mb-10 grid gap-6 sm:grid-cols-2 sm:items-end">
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-accent">
+            How it works
+          </p>
+          <h2 className="font-display text-[clamp(2rem,5vw,3.5rem)] leading-[1] tracking-tight">
+            Three steps from{" "}
+            <br className="hidden sm:block" />
+            URL to <span className="font-sans font-medium italic text-accent">agent-ready</span> skill.
+          </h2>
+        </div>
+        <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+          Behind the scenes: Firecrawl scrapes the page, extracts the HTML, CSS, branding and screenshots, and AI analyses everything together.
+        </p>
       </div>
 
+      <div className="grid gap-4 sm:grid-cols-3">
+        {STEPS.map((step, i) => (
+          <motion.div
+            key={step.title}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.5, delay: i * 0.08 }}
+            className="group relative overflow-hidden rounded-2xl border border-border/80 bg-card/80 p-6 backdrop-blur transition-transform hover:-translate-y-1"
+          >
+            <div className="mb-8 font-mono text-xs text-muted-foreground/60">
+              {step.num}
+            </div>
+            <div className="flex items-end justify-between">
+              <div>
+                <h3 className="font-display text-2xl tracking-tight sm:text-3xl">
+                  {step.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  {step.body}
+                </p>
+              </div>
+              {step.hasArrow && (
+                <ChevronRight className="mb-1 h-5 w-5 flex-shrink-0 text-muted-foreground/40" />
+              )}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Example output */}
       <div id="example" className="mt-16 scroll-mt-24 rounded-2xl border border-border/70 bg-card/70 p-8 backdrop-blur">
         <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-muted-foreground">
           <FileCode2 className="h-3.5 w-3.5" />
@@ -472,6 +634,94 @@ Hairline transitions (150ms ease-out), never bouncy.`}
     </motion.section>
   );
 }
+
+/* ---------------- What we capture (features) ---------------- */
+
+const FEATURES: Array<{ title: string; body: string; icon: React.ReactNode }> = [
+  {
+    title: "Color & typography extraction",
+    body: "Palette, fonts, weights, spacing and border-radius — pulled straight from the page via Firecrawl branding analysis.",
+    icon: <Paintbrush className="h-5 w-5" />,
+  },
+  {
+    title: "Multi-page deep crawl",
+    body: "We don't stop at the homepage. Up to 6 same-origin pages are scraped for richer, more complete style coverage.",
+    icon: <Globe className="h-5 w-5" />,
+  },
+  {
+    title: "Agent-ready SKILL.md",
+    body: "AI distills everything into a single markdown skill file your agent can read — drop it into Claude, Cursor, Codex or Windsurf.",
+    icon: <FileText className="h-5 w-5" />,
+  },
+  {
+    title: "Screenshot capture",
+    body: "A full rendered screenshot is captured alongside the HTML and CSS, so you can see exactly what was analyzed.",
+    icon: <Camera className="h-5 w-5" />,
+  },
+];
+
+function WhatWeCapture() {
+  return (
+    <motion.section
+      id="features"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.6 }}
+      className="mt-16 scroll-mt-24"
+    >
+      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-accent">
+        What we capture
+      </p>
+      <h2 className="max-w-lg font-display text-[clamp(2rem,5vw,3.5rem)] leading-[1] tracking-tight">
+        We read the <span className="font-sans font-medium italic text-accent">invisible grammar</span> of a website.
+      </h2>
+
+      <div className="mt-12 grid gap-4 sm:grid-cols-2">
+        {FEATURES.map((feat, i) => (
+          <motion.div
+            key={feat.title}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.5, delay: i * 0.08 }}
+            className={`group rounded-2xl border border-border/70 p-7 transition-transform hover:-translate-y-1 bg-card/40 backdrop-blur`}
+          >
+            <div className="mb-5 flex items-center gap-3">
+              <div className="text-foreground/70">
+                {feat.icon}
+              </div>
+            </div>
+            <h3 className="font-semibold text-lg tracking-tight">{feat.title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              {feat.body}
+            </p>
+          </motion.div>
+        ))}
+      </div>
+    </motion.section>
+  );
+}
+
+/* ------------ "Steal like an artist" divider ------------ */
+
+function StealDivider() {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8 }}
+      className="steal-divider mx-auto mt-16 max-w-3xl"
+    >
+      <span className="whitespace-nowrap font-display text-lg italic tracking-tight text-muted-foreground/60 sm:text-xl">
+        Steal like an artist.
+      </span>
+    </motion.div>
+  );
+}
+
+
 
 /* ---------------- Scanning state ---------------- */
 
@@ -750,11 +1000,15 @@ function Footer() {
             Snatch. Distill. Ship.
           </div>
           <div className="mt-1 text-sm text-muted-foreground">
-            Built for prompt-engineers who love a good design system.
+            100% Open source. Built for prompt-engineers who love a good design system.
           </div>
         </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Stylesnatch
+        <div className="flex items-center gap-6 text-xs font-mono text-muted-foreground">
+          <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors flex items-center gap-1.5">
+            <Github className="h-3.5 w-3.5" />
+            GitHub
+          </a>
+          <span>© 2026 Stylesnatch</span>
         </div>
       </div>
     </footer>
