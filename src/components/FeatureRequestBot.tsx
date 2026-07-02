@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { MessageSquare, X, Send } from "lucide-react";
+import { MessageSquare, X, Send, Linkedin, Instagram, Mail } from "lucide-react";
 
 export function FeatureRequestBot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -65,7 +65,52 @@ export function FeatureRequestBot() {
                 <Send className="h-4 w-4" />
                 Send Request
               </button>
+
+              <div className="mt-5 border-t border-border/40 pt-4 text-center">
+                <span className="text-xs text-muted-foreground/80">
+                  Or connect with me via
+                </span>
+                <div className="mt-2 flex items-center justify-center gap-3 text-muted-foreground">
+                  <a
+                    href="https://www.linkedin.com/in/digvijayshelar/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full bg-background/50 p-2 transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    <Linkedin className="h-4 w-4" />
+                  </a>
+                  <a
+                    href="mailto:digvijayux@gmail.com"
+                    className="rounded-full bg-background/50 p-2 transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    <Mail className="h-4 w-4" />
+                  </a>
+                  <a
+                    href="https://instagram.com/digvijayux"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full bg-background/50 p-2 transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    <Instagram className="h-4 w-4" />
+                  </a>
+                </div>
+              </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 0.9, originX: 1 }}
+            transition={{ delay: 1, type: "spring", bounce: 0.4 }}
+            className="pointer-events-none absolute right-[4.5rem] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-border/60 bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-sm"
+          >
+            Feature request?
+            <div className="absolute -right-1 top-1/2 h-2 w-2 -translate-y-1/2 rotate-45 border-r border-t border-border/60 bg-card"></div>
           </motion.div>
         )}
       </AnimatePresence>
