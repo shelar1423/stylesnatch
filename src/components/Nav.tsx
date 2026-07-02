@@ -1,11 +1,17 @@
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Wand2, Linkedin, Mail, Instagram, Heart } from "lucide-react";
 import { SupportModal } from "./SupportModal";
 
 export function Nav() {
   const [isSupportOpen, setIsSupportOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpenSupport = () => setIsSupportOpen(true);
+    window.addEventListener("open-support", handleOpenSupport);
+    return () => window.removeEventListener("open-support", handleOpenSupport);
+  }, []);
 
   return (
     <>

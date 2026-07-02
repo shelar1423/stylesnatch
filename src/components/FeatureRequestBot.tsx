@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { MessageSquare, X, Send, Linkedin, Instagram, Mail } from "lucide-react";
+import { MessageSquare, X, Send, Linkedin, Instagram, Mail, Heart } from "lucide-react";
 
 export function FeatureRequestBot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -64,6 +64,17 @@ export function FeatureRequestBot() {
               >
                 <Send className="h-4 w-4" />
                 Send Request
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  window.dispatchEvent(new CustomEvent("open-support"));
+                }}
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-500/10 dark:text-red-400"
+              >
+                <Heart className="h-4 w-4" />
+                Support the project
               </button>
 
               <div className="mt-5 border-t border-border/40 pt-4 text-center">
