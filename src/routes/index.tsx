@@ -227,15 +227,31 @@ function Nav() {
           Run Locally
         </a>
       </nav>
-      <a
-        href="https://github.com/shelar1423/stylesnatch"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-transform hover:scale-[1.02]"
-      >
-        <Github className="h-3.5 w-3.5" />
-        Star repo
-      </a>
+      <div className="flex items-center gap-4">
+        <div className="hidden items-center gap-3 text-muted-foreground sm:flex border-r border-border/60 pr-4">
+          <a href="https://www.linkedin.com/in/digvijayshelar/" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+            <Linkedin className="h-4 w-4" />
+            <span className="sr-only">LinkedIn</span>
+          </a>
+          <a href="mailto:digvijayux@gmail.com" className="hover:text-foreground transition-colors">
+            <Mail className="h-4 w-4" />
+            <span className="sr-only">Email</span>
+          </a>
+          <a href="https://instagram.com/digvijayux" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+            <Instagram className="h-4 w-4" />
+            <span className="sr-only">Instagram</span>
+          </a>
+        </div>
+        <a
+          href="https://github.com/shelar1423/stylesnatch"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-transform hover:scale-[1.02]"
+        >
+          <Github className="h-3.5 w-3.5" />
+          Star repo
+        </a>
+      </div>
     </motion.header>
   );
 }
@@ -268,18 +284,21 @@ function Hero({
         transition={{ duration: 0.5 }}
         className="mx-auto mb-8 flex max-w-md flex-col items-center gap-3 text-center"
       >
-        <a
+        <motion.a
           href="https://github.com/shelar1423/stylesnatch"
           target="_blank"
           rel="noopener noreferrer"
-          className="animated-pill inline-flex w-fit items-center gap-2 rounded-full border border-transparent bg-card/80 px-3.5 py-1.5 text-xs text-muted-foreground backdrop-blur hover:text-foreground transition-colors"
+          animate={{ rotate: [-2, 2, -2, 2, 0] }}
+          transition={{ repeat: Infinity, repeatDelay: 4, duration: 0.4 }}
+          whileHover={{ scale: 1.05, rotate: [-2, 2, -2, 2, 0], transition: { repeat: 0, duration: 0.3 } }}
+          className="animated-pill inline-flex w-fit origin-bottom items-center gap-2 rounded-full border border-transparent bg-card/80 px-3.5 py-1.5 text-xs text-muted-foreground backdrop-blur hover:text-foreground transition-colors"
         >
           <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">Open Source</span>
           <span className="flex items-center gap-1.5">
             Star us on GitHub
             <ArrowRight className="h-3 w-3" />
           </span>
-        </a>
+        </motion.a>
         <p className="text-[13px] leading-relaxed text-muted-foreground/80">
           Clone the repo to use your own scraping service or a different LLM.
         </p>
@@ -289,7 +308,7 @@ function Hero({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: "easeOut" }}
-        className="mx-auto max-w-4xl text-center font-display text-[clamp(2.8rem,8vw,6rem)] leading-[0.95] tracking-tight"
+        className="mx-auto max-w-4xl text-center font-display text-[clamp(2.8rem,8vw,6rem)] leading-tight tracking-tight"
       >
         Turn any website into a{" "}
         <span className="relative inline-block font-sans font-medium italic text-accent">
@@ -587,7 +606,7 @@ function HowItWorks() {
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-accent">
             How it works
           </p>
-          <h2 className="font-display text-[clamp(2rem,5vw,3.5rem)] leading-[1] tracking-tight">
+          <h2 className="font-display text-[clamp(2rem,5vw,3.5rem)] leading-tight tracking-tight">
             Three steps from{" "}
             <br className="hidden sm:block" />
             URL to <span className="font-sans font-medium italic text-accent">agent-ready</span> skill.
@@ -688,7 +707,7 @@ function WhatWeCapture() {
       <p className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-accent">
         What we capture
       </p>
-      <h2 className="max-w-lg font-display text-[clamp(2rem,5vw,3.5rem)] leading-[1] tracking-tight">
+      <h2 className="max-w-lg font-display text-[clamp(2rem,5vw,3.5rem)] leading-tight tracking-tight">
         We read the <span className="font-sans font-medium italic text-accent">invisible grammar</span> of a website.
       </h2>
 
