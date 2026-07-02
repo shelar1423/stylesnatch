@@ -152,7 +152,7 @@ function Hero({
         className="mx-auto max-w-4xl text-center font-display text-[clamp(2.8rem,8vw,6rem)] leading-tight tracking-tight"
       >
         Turn any website into a{" "}
-        <span className="relative inline-block pr-1 font-sans font-medium italic text-accent">
+        <span className="relative inline-block pr-[0.2em] font-sans font-medium italic text-accent">
           skill
           <svg
             aria-hidden
