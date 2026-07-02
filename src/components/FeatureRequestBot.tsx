@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { MessageSquare, X, Send, Linkedin, Instagram, Mail, Heart } from "lucide-react";
 
 export function FeatureRequestBot() {
-  const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
+  const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY?.trim();
   
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
