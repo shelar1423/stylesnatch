@@ -158,6 +158,14 @@ function PaperTexture() {
 }
 
 
+const SCAN_STEPS = [
+  "Firing up headless browser…",
+  "Fetching the homepage…",
+  "Reading colors, type & spacing…",
+  "Crawling a few more pages…",
+  "Distilling into a SKILL.md…",
+];
+
 function ScanningState({ url }: { url: string }) {
   const [currentStep, setCurrentStep] = useState(0);
 

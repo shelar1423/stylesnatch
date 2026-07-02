@@ -16,6 +16,11 @@ import {
   Mail,
   Instagram,
   Github,
+  Loader2,
+  Paintbrush,
+  Globe,
+  FileText,
+  Camera,
 } from "lucide-react";
 
 import { Toaster } from "@/components/ui/sonner";
@@ -696,9 +701,80 @@ function StealDivider() {
 
 /* ---------------- Scanning state ---------------- */
 
-const SCAN_STEPS = [
-  "Fetching the homepage…",
-  "Reading colors, type & spacing…",
-  "Crawling a few more pages…",
-  "Distilling into a SKILL.md…",
-];
+
+function PoweredBy() {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      className="relative mt-32 overflow-hidden rounded-[2rem] border border-border/40 bg-gradient-to-b from-card/80 to-background p-10 text-center shadow-2xl shadow-black/5 sm:p-16 backdrop-blur"
+    >
+      {/* Subtle background glow */}
+      <div className="pointer-events-none absolute inset-x-0 -top-24 mx-auto h-48 w-full max-w-md rounded-full bg-accent/15 blur-3xl" />
+      
+      <h2 className="relative font-display text-[clamp(2rem,5vw,3rem)] leading-tight tracking-tight">
+        Powered by the best. <br className="hidden sm:block" />
+        <span className="font-sans font-medium italic text-accent">Yours to modify.</span>
+      </h2>
+      <p className="relative mx-auto mt-6 max-w-2xl text-muted-foreground text-sm sm:text-base leading-relaxed">
+        Stylesnatch uses <strong className="text-foreground">Firecrawl</strong> to deeply scan website structure, and <strong className="text-foreground">Gemini 2.5 Flash</strong> (via OpenRouter) to distill that data into an elegant design system. 
+      </p>
+      
+      <div className="relative mt-10 flex flex-col items-center justify-center gap-5">
+        <a
+          href="https://github.com/shelar1423/stylesnatch#local-setup-instructions"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background transition-all hover:scale-[1.02] hover:bg-foreground/90 shadow-lg shadow-foreground/10"
+        >
+          <Github className="h-4 w-4 transition-transform group-hover:rotate-12" />
+          Set it up locally
+        </a>
+        <p className="text-xs text-muted-foreground/80 max-w-sm">
+          100% open source. Clone the repo to use your own scraping service or a different LLM.
+        </p>
+      </div>
+    </motion.section>
+  );
+}
+
+/* ---------------- Footer ---------------- */
+
+function Footer() {
+  return (
+    <footer className="relative mx-auto max-w-6xl px-6 pb-12 sm:px-8">
+      <div className="flex flex-col items-start justify-between gap-6 border-t border-border/60 pt-8 sm:flex-row sm:items-end">
+        <div>
+          <div className="font-display text-3xl tracking-tight">
+            Snatch. Distill. Ship.
+          </div>
+          <div className="mt-1 text-sm text-muted-foreground">
+            100% Open source. Built for prompt-engineers who love a good design system.
+          </div>
+          <div className="mt-6 flex items-center gap-4 text-muted-foreground">
+            <a href="https://www.linkedin.com/in/digvijayshelar/" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+              <Linkedin className="h-4 w-4" />
+              <span className="sr-only">LinkedIn</span>
+            </a>
+            <a href="mailto:digvijayux@gmail.com" className="hover:text-foreground transition-colors">
+              <Mail className="h-4 w-4" />
+              <span className="sr-only">Email</span>
+            </a>
+            <a href="https://instagram.com/digvijayux" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+              <Instagram className="h-4 w-4" />
+              <span className="sr-only">Instagram</span>
+            </a>
+          </div>
+        </div>
+        <div className="flex items-center gap-6 text-xs font-mono text-muted-foreground">
+          <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors flex items-center gap-1.5">
+            <Github className="h-3.5 w-3.5" />
+            GitHub
+          </a>
+          <span>© 2026 Stylesnatch</span>
+        </div>
+      </div>
+    </footer>
+  );
+}
