@@ -98,8 +98,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "AI Style Replicator scans websites and generates markdown files for AI agent skill replication." },
       { property: "og:description", content: "AI Style Replicator scans websites and generates markdown files for AI agent skill replication." },
       { name: "twitter:description", content: "AI Style Replicator scans websites and generates markdown files for AI agent skill replication." },
-      { property: "og:image", content: "/og-image.png" },
-      { name: "twitter:image", content: "/og-image.png" },
+      { property: "og:image", content: "https://stylesnatch.vercel.app/og-image.png" },
+      { name: "twitter:image", content: "https://stylesnatch.vercel.app/og-image.png" },
     ],
     links: [
       {
