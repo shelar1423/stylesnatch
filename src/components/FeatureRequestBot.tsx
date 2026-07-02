@@ -41,7 +41,9 @@ export function FeatureRequestBot() {
           setIsOpen(false);
         }, 2000);
       } else {
-        alert("Failed to send request. Please try again.");
+        const errorData = await response.json();
+        console.error("Web3Forms error:", errorData);
+        alert(`Failed to send request: ${errorData.message || "Please try again."}`);
       }
     } catch (error) {
       alert("Something went wrong. Check your connection.");
