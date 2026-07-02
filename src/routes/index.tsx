@@ -34,8 +34,7 @@ import {
 import { scanSite, type ScanResult } from "@/lib/scan.functions";
 import { Toaster } from "@/components/ui/sonner";
 
-export const Route = createFileRoute("/")(
-  {
+export const Route = createFileRoute("/")({
   component: Index,
 });
 
@@ -44,6 +43,7 @@ function Index() {
   const [result, setResult] = useState<ScanResult | null>(null);
   const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
   const resultSectionRef = useRef<HTMLDivElement | null>(null);
+  const scanningSectionRef = useRef<HTMLDivElement | null>(null);
   const scan = useServerFn(scanSite);
 
   const mutation = useMutation({
@@ -81,6 +81,14 @@ function Index() {
     return () => window.clearTimeout(id);
   }, [result]);
 
+  useEffect(() => {
+    if (!isScanning) return;
+    const id = window.setTimeout(() => {
+      scanningSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+    return () => window.clearTimeout(id);
+  }, [isScanning]);
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) {
@@ -109,7 +117,7 @@ function Index() {
         </div>
         <AnimatePresence mode="wait">
           {isScanning ? (
-            <div className="mx-auto max-w-6xl px-6 sm:px-8">
+            <div className="mx-auto max-w-6xl px-6 sm:px-8" ref={scanningSectionRef}>
               <ScanningState key="scanning" url={url} />
             </div>
           ) : result ? (
