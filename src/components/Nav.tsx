@@ -1,10 +1,16 @@
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { motion } from "motion/react";
-import { Wand2, Linkedin, Mail, Instagram } from "lucide-react";
+import { Wand2, Linkedin, Mail, Instagram, Heart } from "lucide-react";
+import { SupportModal } from "./SupportModal";
 
 export function Nav() {
+  const [isSupportOpen, setIsSupportOpen] = useState(false);
+
   return (
-    <motion.header
+    <>
+      <SupportModal isOpen={isSupportOpen} setIsOpen={setIsSupportOpen} />
+      <motion.header
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
@@ -67,6 +73,13 @@ export function Nav() {
             <span className="sr-only">Instagram</span>
           </a>
         </div>
+        <button
+          onClick={() => setIsSupportOpen(true)}
+          className="group flex items-center gap-1.5 rounded-full border border-red-500/20 bg-red-500/5 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-500/10 dark:text-red-400"
+        >
+          <Heart className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
+          Support
+        </button>
         <a
           href="https://github.com/shelar1423/stylesnatch"
           target="_blank"
@@ -80,5 +93,6 @@ export function Nav() {
         </a>
       </div>
     </motion.header>
+    </>
   );
 }
