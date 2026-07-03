@@ -23,7 +23,7 @@ function MakerPage() {
         >
           <div className="mb-6 h-24 w-24 overflow-hidden rounded-full border-2 border-border/80 shadow-xl">
             <img
-              src="https://framerusercontent.com/images/MAWWEQbmXuB0NW2oboUC8pGoI8Q.png"
+              src="/maker-photo.jpg"
               alt="Digvijay Shelar"
               className="h-full w-full object-cover"
             />
