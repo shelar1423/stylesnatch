@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "motion/react";
 import { ArrowRight, ExternalLink } from "lucide-react";
+import { Nav } from "../components/Nav";
 
 export const Route = createFileRoute("/maker")({
   component: MakerPage,
@@ -8,7 +9,9 @@ export const Route = createFileRoute("/maker")({
 
 function MakerPage() {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-background pt-24 sm:pt-32">
+    <main className="relative min-h-screen overflow-hidden bg-background">
+      <Nav />
+      <div className="pt-24 sm:pt-32">
       {/* Glow effects */}
       <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-accent/20 opacity-50 blur-[120px] mix-blend-screen" />
       <div className="pointer-events-none absolute right-0 top-1/4 -z-10 h-[500px] w-[500px] rounded-full bg-blue-500/10 opacity-30 blur-[100px] mix-blend-screen" />
@@ -66,6 +69,7 @@ function MakerPage() {
             </a>
           </div>
         </motion.div>
+      </div>
       </div>
     </main>
   );
