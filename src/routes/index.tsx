@@ -183,13 +183,17 @@ function Hero({
         file your agent can read to design in that style.
       </motion.p>
 
-        <motion.form
+        <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.2 }}
-        onSubmit={onSubmit}
-        className="relative mx-auto mt-4 flex w-full max-w-2xl items-center gap-2 rounded-2xl border border-border/80 bg-card/90 p-2 shadow-[0_1px_0_oklch(1_0_0_/_0.7)_inset,0_20px_50px_-25px_oklch(0.2_0.02_60_/_0.35)] backdrop-blur"
+        className="relative mx-auto mt-4 w-full max-w-2xl overflow-hidden rounded-2xl p-[1px] shadow-[0_1px_0_oklch(1_0_0_/_0.7)_inset,0_20px_50px_-25px_oklch(0.2_0.02_60_/_0.35)]"
       >
+        <div className="absolute inset-[-100%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_50%,oklch(0.6_0.1_250)_100%)] opacity-20 dark:opacity-40" />
+        <form
+          onSubmit={onSubmit}
+          className="relative flex h-full w-full items-center gap-2 rounded-[15px] bg-card p-2 backdrop-blur"
+        >
         <div className="pl-3 pr-1 text-muted-foreground">
           <span className="font-mono text-sm">https://</span>
         </div>
@@ -219,7 +223,8 @@ function Hero({
             </>
           )}
         </button>
-      </motion.form>
+        </form>
+      </motion.div>
 
       {isCooling ? (
         <motion.p

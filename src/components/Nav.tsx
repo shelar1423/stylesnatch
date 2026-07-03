@@ -49,13 +49,7 @@ export function Nav() {
         >
           Features
         </Link>
-        <Link
-          to="/"
-          hash="example"
-          className="hover:text-foreground transition-colors"
-        >
-          Example
-        </Link>
+
         <a
           href="https://github.com/shelar1423/stylesnatch#local-setup-instructions"
           target="_blank"
@@ -128,9 +122,7 @@ export function Nav() {
             <Link to="/" hash="features" onClick={() => setIsMobileMenuOpen(false)}>
               Features
             </Link>
-            <Link to="/" hash="example" onClick={() => setIsMobileMenuOpen(false)}>
-              Example
-            </Link>
+
             <a
               href="https://github.com/shelar1423/stylesnatch#local-setup-instructions"
               target="_blank"
