@@ -183,16 +183,12 @@ function Hero({
         file your agent can read to design in that style.
       </motion.p>
 
-        <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.2 }}
-        className="relative mx-auto mt-4 w-full max-w-2xl overflow-hidden rounded-2xl p-[2px] shadow-[0_20px_50px_-25px_oklch(0.2_0.02_60_/_0.35)] bg-border/50"
-      >
-        <div className="absolute inset-[-100%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,transparent_0%,transparent_50%,#8b5cf6_100%)] opacity-70" />
-        <form
+        <motion.form
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.2 }}
           onSubmit={onSubmit}
-          className="relative z-10 flex h-full w-full items-center gap-2 rounded-[14px] bg-card p-2 shadow-[0_1px_0_oklch(1_0_0_/_0.7)_inset]"
+          className="animated-pill relative mx-auto mt-4 flex w-full max-w-2xl items-center gap-2 rounded-2xl border border-transparent bg-card/90 p-2 shadow-[0_1px_0_oklch(1_0_0_/_0.7)_inset,0_20px_50px_-25px_oklch(0.2_0.02_60_/_0.35)] backdrop-blur"
         >
         <div className="pl-3 pr-1 text-muted-foreground">
           <span className="font-mono text-sm">https://</span>
@@ -223,8 +219,7 @@ function Hero({
             </>
           )}
         </button>
-        </form>
-      </motion.div>
+        </motion.form>
 
       {isCooling ? (
         <motion.p
