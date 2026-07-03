@@ -56,12 +56,6 @@ export function Nav() {
         >
           Example
         </Link>
-        <Link
-          to="/maker"
-          className="hover:text-foreground transition-colors"
-        >
-          Meet the Maker
-        </Link>
         <a
           href="https://github.com/shelar1423/stylesnatch#local-setup-instructions"
           target="_blank"
@@ -70,6 +64,12 @@ export function Nav() {
         >
           Run Locally
         </a>
+        <Link
+          to="/maker"
+          className="hover:text-foreground transition-colors"
+        >
+          Meet the Maker
+        </Link>
       </nav>
       <div className="flex items-center gap-4">
         <div className="hidden items-center gap-3 text-muted-foreground sm:flex border-r border-border/60 pr-4">
@@ -131,9 +131,6 @@ export function Nav() {
             <Link to="/" hash="example" onClick={() => setIsMobileMenuOpen(false)}>
               Example
             </Link>
-            <Link to="/maker" onClick={() => setIsMobileMenuOpen(false)}>
-              Meet the Maker
-            </Link>
             <a
               href="https://github.com/shelar1423/stylesnatch#local-setup-instructions"
               target="_blank"
@@ -142,6 +139,9 @@ export function Nav() {
             >
               Run Locally
             </a>
+            <Link to="/maker" onClick={() => setIsMobileMenuOpen(false)}>
+              Meet the Maker
+            </Link>
             
             <div className="mt-4 flex items-center gap-6 border-t border-border/50 pt-6 text-muted-foreground">
               <a href="https://www.linkedin.com/in/digvijayshelar/" target="_blank" rel="noopener noreferrer">
