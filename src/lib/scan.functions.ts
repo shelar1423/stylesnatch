@@ -401,6 +401,11 @@ description: Replicates the visual style of ${siteName} — use when the user as
 - decorative rules (texture, floating accents, shadows, background shapes)
 - sample content placeholders and tone guidance
 
+## Motion & Interactions
+- hover states, active states, and transition timings
+- scroll animations or micro-interactions (e.g., springy buttons, fade-in on scroll)
+- specific CSS timing functions (e.g., cubic-bezier curves) or Framer Motion properties
+
 ## Voice & Copy
 Tone, capitalization, punchy vs verbose, example headlines from the site. Include sample CTA text, eyebrow copy, and short supporting paragraph patterns.
 
