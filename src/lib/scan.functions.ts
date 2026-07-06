@@ -142,6 +142,12 @@ ${palette}
 5. Footer
    - Minimal links and soft supporting text.
 
+## Motion & Interactions
+- Hover states: Subtle scaling (1.02x) and shadow elevation on cards.
+- Active states: Quick scale down (0.98x) to feel tactile and responsive.
+- Transitions: Use smooth, bouncy easing (e.g., cubic-bezier(0.34, 1.56, 0.64, 1)) for a modern feel.
+- Scroll animations: Fade in and slide up (20px) for elements entering the viewport.
+
 ## Component Rules
 - Primary button: accent background, white text, medium weight, 16px vertical padding, 32px horizontal padding, radius 9999px.
 - Secondary button: transparent background, 1px accent border, accent text, same padding and radius.
