@@ -290,7 +290,7 @@ export const scanSite = createServerFn({ method: "POST" })
           return res.text;
         } catch (err: unknown) {
           console.error("generateText error:", err);
-          const msg = String(err?.message ?? err);
+          const msg = String((err as { message?: string })?.message ?? err);
           const is429 = /too many requests|rate limit|429|rateLimit/i.test(msg);
 
           if (shouldUseFallback(err)) {
@@ -308,6 +308,8 @@ export const scanSite = createServerFn({ method: "POST" })
           // Try to read a Retry-After value if available on common shapes
           let retryAfterSec: number | undefined;
           try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const e = err as any;
             const header =
               e?.headers?.get?.("retry-after") ??
               e?.response?.headers?.["retry-after"] ??
