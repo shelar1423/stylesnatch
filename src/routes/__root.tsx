@@ -96,9 +96,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "Stylesnatch — Turn any website into an AI style skill" },
-      { name: "description", content: "AI Style Replicator scans websites and generates markdown files for AI agent skill replication." },
-      { property: "og:description", content: "AI Style Replicator scans websites and generates markdown files for AI agent skill replication." },
-      { name: "twitter:description", content: "AI Style Replicator scans websites and generates markdown files for AI agent skill replication." },
+      {
+        name: "description",
+        content:
+          "AI Style Replicator scans websites and generates markdown files for AI agent skill replication.",
+      },
+      {
+        property: "og:description",
+        content:
+          "AI Style Replicator scans websites and generates markdown files for AI agent skill replication.",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "AI Style Replicator scans websites and generates markdown files for AI agent skill replication.",
+      },
       { property: "og:image", content: "https://stylesnatch.vercel.app/og-image.png" },
       { name: "twitter:image", content: "https://stylesnatch.vercel.app/og-image.png" },
     ],

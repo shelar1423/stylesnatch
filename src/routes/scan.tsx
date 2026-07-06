@@ -63,8 +63,8 @@ function ScanPage() {
       const friendly = match
         ? `Rate limit reached — try again in ${match[1]}s or check your OPENROUTER_API_KEY/quota.`
         : /too many requests|rate limit|429/i.test(message)
-        ? "Rate limit reached from the AI provider (Too Many Requests). Try again in a minute or check your OPENROUTER_API_KEY/quota."
-        : message;
+          ? "Rate limit reached from the AI provider (Too Many Requests). Try again in a minute or check your OPENROUTER_API_KEY/quota."
+          : message;
       toast.error("Scan failed", { description: friendly });
       if (match) {
         const sec = Number(match[1]);
@@ -120,12 +120,14 @@ function ScanPage() {
 function PaperTexture() {
   return (
     <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden mix-blend-overlay">
-      <svg
-        className="absolute h-full w-full opacity-[0.2]"
-        xmlns="http://www.w3.org/200.svg"
-      >
+      <svg className="absolute h-full w-full opacity-[0.2]" xmlns="http://www.w3.org/200.svg">
         <filter id="noiseFilter">
-          <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch" />
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.8"
+            numOctaves="3"
+            stitchTiles="stitch"
+          />
           <feColorMatrix type="matrix" values="1 0 0 0 0, 0 1 0 0 0, 0 0 1 0 0, 0 0 0 0.1 0" />
         </filter>
         <rect width="100%" height="100%" filter="url(#noiseFilter)" />
@@ -140,7 +142,6 @@ function PaperTexture() {
     </div>
   );
 }
-
 
 const SCAN_STEPS = [
   "Firing up headless browser…",
@@ -221,7 +222,10 @@ function ScanningState({ url }: { url: string }) {
               >
                 <motion.span
                   className={`inline-block h-1.5 w-1.5 rounded-full ${isActive ? "bg-accent" : "bg-foreground/30"}`}
-                  animate={{ scale: isActive ? [1, 1.6, 1] : 1, opacity: isActive ? [0.6, 1, 0.6] : 1 }}
+                  animate={{
+                    scale: isActive ? [1, 1.6, 1] : 1,
+                    opacity: isActive ? [0.6, 1, 0.6] : 1,
+                  }}
                   transition={{ repeat: isActive ? Infinity : 0, duration: 1.4, delay: i * 0.1 }}
                 />
                 {label}
@@ -239,7 +243,13 @@ function ScanningState({ url }: { url: string }) {
 
 /* ---------------- Result view ---------------- */
 
-function ResultView({ result, innerRef }: { result: ScanResult; innerRef: RefObject<HTMLDivElement | null> }) {
+function ResultView({
+  result,
+  innerRef,
+}: {
+  result: ScanResult;
+  innerRef: RefObject<HTMLDivElement | null>;
+}) {
   const [copied, setCopied] = useState(false);
   const filename = useMemo(() => {
     try {
@@ -390,16 +400,14 @@ function ResultView({ result, innerRef }: { result: ScanResult; innerRef: RefObj
             </div>
             <div className="max-h-[70vh] overflow-y-auto px-6 py-5">
               <article className="prose-style">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {result.skillMarkdown}
-                </ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.skillMarkdown}</ReactMarkdown>
               </article>
             </div>
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
-            Drop this into your agent&apos;s skills folder (Claude Code, Codex,
-            Cursor rules, etc.) and reference it whenever you want output that
-            looks like <span className="font-mono">{result.title}</span>.
+            Drop this into your agent&apos;s skills folder (Claude Code, Codex, Cursor rules, etc.)
+            and reference it whenever you want output that looks like{" "}
+            <span className="font-mono">{result.title}</span>.
           </p>
         </div>
       </div>
@@ -419,15 +427,17 @@ function PoweredBy() {
     >
       {/* Subtle background glow */}
       <div className="pointer-events-none absolute inset-x-0 -top-24 mx-auto h-48 w-full max-w-md rounded-full bg-accent/15 blur-3xl" />
-      
+
       <h2 className="relative font-display text-[clamp(2rem,5vw,3rem)] leading-tight tracking-tight">
         Powered by the best. <br className="hidden sm:block" />
         <span className="font-sans font-medium italic text-accent">Yours to modify.</span>
       </h2>
       <p className="relative mx-auto mt-6 max-w-2xl text-muted-foreground text-sm sm:text-base leading-relaxed">
-        Stylesnatch uses <strong className="text-foreground">Firecrawl</strong> to deeply scan website structure, and <strong className="text-foreground">Gemini 2.5 Flash</strong> (via OpenRouter) to distill that data into an elegant design system. 
+        Stylesnatch uses <strong className="text-foreground">Firecrawl</strong> to deeply scan
+        website structure, and <strong className="text-foreground">Gemini 2.5 Flash</strong> (via
+        OpenRouter) to distill that data into an elegant design system.
       </p>
-      
+
       <div className="relative mt-10 flex flex-col items-center justify-center gap-5">
         <a
           href="https://github.com/shelar1423/stylesnatch#local-setup-instructions"
@@ -453,29 +463,45 @@ function Footer() {
     <footer className="relative mx-auto max-w-6xl px-6 pb-12 sm:px-8">
       <div className="flex flex-col items-start justify-between gap-6 border-t border-border/60 pt-8 sm:flex-row sm:items-end">
         <div>
-          <div className="font-display text-3xl tracking-tight">
-            Snatch. Distill. Ship.
-          </div>
+          <div className="font-display text-3xl tracking-tight">Snatch. Distill. Ship.</div>
           <div className="mt-1 text-sm text-muted-foreground">
             100% Open source. Built for prompt-engineers who love a good design system.
           </div>
           <div className="mt-6 flex items-center gap-4 text-muted-foreground">
-            <a href="https://www.linkedin.com/in/digvijayshelar/" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+            <a
+              href="https://www.linkedin.com/in/digvijayshelar/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
               <Linkedin className="h-4 w-4" />
               <span className="sr-only">LinkedIn</span>
             </a>
-            <a href="mailto:digvijayux@gmail.com" className="hover:text-foreground transition-colors">
+            <a
+              href="mailto:digvijayux@gmail.com"
+              className="hover:text-foreground transition-colors"
+            >
               <Mail className="h-4 w-4" />
               <span className="sr-only">Email</span>
             </a>
-            <a href="https://instagram.com/digvijayux" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+            <a
+              href="https://instagram.com/digvijayux"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
               <Instagram className="h-4 w-4" />
               <span className="sr-only">Instagram</span>
             </a>
           </div>
         </div>
         <div className="flex items-center gap-6 text-xs font-mono text-muted-foreground">
-          <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors flex items-center gap-1.5">
+          <a
+            href="https://github.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-foreground transition-colors flex items-center gap-1.5"
+          >
             <Github className="h-3.5 w-3.5" />
             GitHub
           </a>

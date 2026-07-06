@@ -165,8 +165,12 @@
 
 /* ---- Animated gradient border for hero pill ---- */
 @keyframes gradient-rotate {
-  0% { --gradient-angle: 0deg; }
-  100% { --gradient-angle: 360deg; }
+  0% {
+    --gradient-angle: 0deg;
+  }
+  100% {
+    --gradient-angle: 360deg;
+  }
 }
 @property --gradient-angle {
   syntax: "<angle>";
@@ -178,7 +182,7 @@
   isolation: isolate;
 }
 .animated-pill::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -1.5px;
   border-radius: inherit;
@@ -195,7 +199,7 @@
   opacity: 0.7;
 }
 .animated-pill::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -205,8 +209,12 @@
 
 /* ---- Marquee animation ---- */
 @keyframes marquee-scroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 .marquee-track {
   display: flex;
@@ -239,7 +247,7 @@
 }
 .steal-divider::before,
 .steal-divider::after {
-  content: '';
+  content: "";
   flex: 1;
   height: 1px;
   background: linear-gradient(
@@ -259,7 +267,9 @@
   position: relative;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.04);
   padding: 8px 12px;
   font-size: 12px;
   font-family: var(--font-mono);
@@ -272,7 +282,9 @@
   position: relative;
   background: white;
   border-radius: 14px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.04);
   width: 48px;
   height: 48px;
   display: grid;
@@ -283,16 +295,16 @@
 
 /* ---- Feature card gradient backgrounds ---- */
 .feature-card-blue {
-  background: linear-gradient(160deg, rgba(240,242,255,0.7) 0%, rgba(255,255,255,0.9) 100%);
+  background: linear-gradient(160deg, rgba(240, 242, 255, 0.7) 0%, rgba(255, 255, 255, 0.9) 100%);
 }
 .feature-card-green {
-  background: linear-gradient(160deg, rgba(236,255,242,0.7) 0%, rgba(255,255,255,0.9) 100%);
+  background: linear-gradient(160deg, rgba(236, 255, 242, 0.7) 0%, rgba(255, 255, 255, 0.9) 100%);
 }
 .feature-card-red {
-  background: linear-gradient(160deg, rgba(255,240,240,0.7) 0%, rgba(255,255,255,0.9) 100%);
+  background: linear-gradient(160deg, rgba(255, 240, 240, 0.7) 0%, rgba(255, 255, 255, 0.9) 100%);
 }
 .feature-card-yellow {
-  background: linear-gradient(160deg, rgba(255,250,230,0.7) 0%, rgba(255,255,255,0.9) 100%);
+  background: linear-gradient(160deg, rgba(255, 250, 230, 0.7) 0%, rgba(255, 255, 255, 0.9) 100%);
 }
 
 /* SKILL.md markdown preview styling */
@@ -311,19 +323,33 @@
   margin-bottom: 0.5em;
   line-height: 1.1;
 }
-.prose-style h1 { font-size: 2rem; }
+.prose-style h1 {
+  font-size: 2rem;
+}
 .prose-style h2 {
   font-size: 1.5rem;
   border-bottom: 1px solid var(--color-border);
   padding-bottom: 0.3em;
 }
-.prose-style h3 { font-size: 1.15rem; }
-.prose-style p { margin: 0.6em 0; }
+.prose-style h3 {
+  font-size: 1.15rem;
+}
+.prose-style p {
+  margin: 0.6em 0;
+}
 .prose-style ul,
-.prose-style ol { margin: 0.5em 0 0.75em 1.25em; }
-.prose-style li { margin: 0.2em 0; }
-.prose-style ul li { list-style: disc; }
-.prose-style ol li { list-style: decimal; }
+.prose-style ol {
+  margin: 0.5em 0 0.75em 1.25em;
+}
+.prose-style li {
+  margin: 0.2em 0;
+}
+.prose-style ul li {
+  list-style: disc;
+}
+.prose-style ol li {
+  list-style: decimal;
+}
 .prose-style code {
   font-family: var(--font-mono);
   font-size: 0.85em;
@@ -364,4 +390,6 @@
   color: var(--color-muted-foreground);
   margin: 0.8em 0;
 }
-.prose-style strong { font-weight: 600; }
+.prose-style strong {
+  font-weight: 600;
+}

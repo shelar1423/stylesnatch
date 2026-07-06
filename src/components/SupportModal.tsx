@@ -45,23 +45,18 @@ export function SupportModal({
                 </div>
                 <h2 className="mb-2 font-display text-2xl tracking-tight">Support the project</h2>
                 <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
-                  Stylesnatch is completely free and open-source. If it saved you some time building your UI, consider supporting its development with a small tip!
+                  Stylesnatch is completely free and open-source. If it saved you some time building
+                  your UI, consider supporting its development with a small tip!
                 </p>
 
                 <div className="relative mb-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-border/50">
-                  <img
-                    src={qrUrl}
-                    alt="UPI QR Code"
-                    className="h-[200px] w-[200px] rounded-lg"
-                  />
+                  <img src={qrUrl} alt="UPI QR Code" className="h-[200px] w-[200px] rounded-lg" />
                   <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-border/80 bg-background px-3 py-1 text-xs font-medium shadow-sm">
                     Scan with any UPI App
                   </div>
                 </div>
 
-                <div className="mb-4 text-xs font-mono text-muted-foreground/80">
-                  {upiId}
-                </div>
+                <div className="mb-4 text-xs font-mono text-muted-foreground/80">{upiId}</div>
 
                 <a
                   href={upiUrl}

@@ -4,19 +4,19 @@ import { MessageSquare, X, Send, Linkedin, Instagram, Mail, Heart } from "lucide
 
 export function FeatureRequestBot() {
   const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY?.trim();
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // If the API key isn't set (e.g. for people cloning the open-source repo), 
+  // If the API key isn't set (e.g. for people cloning the open-source repo),
   // we completely hide the widget.
   if (!accessKey) return null;
 
   const handleSend = async () => {
     if (!message.trim() || isSending) return;
-    
+
     setIsSending(true);
     try {
       const response = await fetch("https://api.web3forms.com/submit", {
@@ -32,7 +32,7 @@ export function FeatureRequestBot() {
           from_name: "Stylesnatch App",
         }),
       });
-      
+
       if (response.ok) {
         setIsSuccess(true);
         setTimeout(() => {
@@ -75,10 +75,11 @@ export function FeatureRequestBot() {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            
+
             <div className="p-4">
               <p className="mb-3 text-xs text-muted-foreground">
-                Have an idea to make Stylesnatch better? Drop it below and it'll be sent directly to my inbox!
+                Have an idea to make Stylesnatch better? Drop it below and it'll be sent directly to
+                my inbox!
               </p>
               <textarea
                 value={message}
@@ -116,9 +117,7 @@ export function FeatureRequestBot() {
               </button>
 
               <div className="mt-5 border-t border-border/40 pt-4 text-center">
-                <span className="text-xs text-muted-foreground/80">
-                  Or connect with me via
-                </span>
+                <span className="text-xs text-muted-foreground/80">Or connect with me via</span>
                 <div className="mt-2 flex items-center justify-center gap-3 text-muted-foreground">
                   <a
                     href="https://www.linkedin.com/in/digvijayshelar/"
