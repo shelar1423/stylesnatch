@@ -89,7 +89,9 @@ function buildFallbackSkillMarkdown(args: {
         .join("\n")
     : "- background: #FAF7EE\n- foreground: #111111\n- accent: #5B6CFF";
   const title = args.metadata.title || args.siteName || args.url;
-  const description = args.metadata.description || "A polished landing page skill capturing the site’s layout, spacing, palette, and component style for faithful reproduction.";
+  const description =
+    args.metadata.description ||
+    "A polished landing page skill capturing the site’s layout, spacing, palette, and component style for faithful reproduction.";
 
   return `---
 name: ${slug}-style
@@ -171,28 +173,34 @@ Use this skill when the user asks for a landing page, homepage, or product marke
 ### Source Signals
 - URL: ${args.url}
 - Homepage excerpt: ${args.primaryMarkdown.slice(0, 240).replace(/\s+/g, " ")}
-- Additional pages: ${args.secondaryMarkdowns.slice(0, 2).map((item) => item.url).join(", ") || "none"}
+- Additional pages: ${
+    args.secondaryMarkdowns
+      .slice(0, 2)
+      .map((item) => item.url)
+      .join(", ") || "none"
+  }
 `;
 }
 
 function shouldUseFallback(err: unknown): boolean {
   const msg = String(err?.message ?? err ?? "");
-  return /more credits|insufficient credits|credit|402|401|403|invalid api key|api key|ENOTFOUND|getaddrinfo|connect to api|network|fetch failed|ECONN/i.test(msg);
+  return /more credits|insufficient credits|credit|402|401|403|invalid api key|api key|ENOTFOUND|getaddrinfo|connect to api|network|fetch failed|ECONN/i.test(
+    msg,
+  );
 }
 
 export const scanSite = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ScanInput.parse(input))
   .handler(async ({ data }): Promise<ScanResult> => {
     const url = normalizeUrl(data.url);
-    const firecrawlKey =
-      process.env.FIRECRAWL_API_KEY ?? process.env.VITE_FIRECRAWL_API_KEY;
+    const firecrawlKey = process.env.FIRECRAWL_API_KEY ?? process.env.VITE_FIRECRAWL_API_KEY;
     const openRouterKey = process.env.OPENROUTER_API_KEY ?? process.env.VITE_OPENROUTER_API_KEY;
     if (!firecrawlKey)
-      throw new Error(
-        "Firecrawl is not connected. Set FIRECRAWL_API_KEY in your environment.",
-      );
+      throw new Error("Firecrawl is not connected. Set FIRECRAWL_API_KEY in your environment.");
     if (!openRouterKey) {
-      console.warn("OpenRouter key is not configured; the built-in fallback skill template will be used.");
+      console.warn(
+        "OpenRouter key is not configured; the built-in fallback skill template will be used.",
+      );
     }
 
     const { default: Firecrawl } = await import("@mendable/firecrawl-js");
@@ -206,13 +214,15 @@ export const scanSite = createServerFn({ method: "POST" })
 
     const primaryMarkdown =
       (primary.markdown as string | undefined) ??
-      ((primary.data as { markdown?: string } | undefined)?.markdown ?? "");
+      (primary.data as { markdown?: string } | undefined)?.markdown ??
+      "";
     const screenshot =
       (primary.screenshot as string | undefined) ??
-      ((primary.data as { screenshot?: string } | undefined)?.screenshot ?? null);
+      (primary.data as { screenshot?: string } | undefined)?.screenshot ??
+      null;
     const branding =
-      ((primary.branding as BrandingPayload | undefined) ??
-        (primary.data as { branding?: BrandingPayload } | undefined)?.branding) ??
+      (primary.branding as BrandingPayload | undefined) ??
+      (primary.data as { branding?: BrandingPayload } | undefined)?.branding ??
       null;
     const metadata =
       (primary.metadata as Record<string, string> | undefined) ??
@@ -220,7 +230,8 @@ export const scanSite = createServerFn({ method: "POST" })
       {};
     const links: string[] =
       (primary.links as string[] | undefined) ??
-      ((primary.data as { links?: string[] } | undefined)?.links ?? []);
+      (primary.data as { links?: string[] } | undefined)?.links ??
+      [];
 
     // 2) Pick a small set of same-origin secondary pages (up to 6) for richer coverage
     let origin = "";
@@ -264,9 +275,7 @@ export const scanSite = createServerFn({ method: "POST" })
     const { generateText } = await import("ai");
 
     const gateway = createOpenRouterGatewayProvider(openRouterKey);
-    const model = gateway(
-      process.env.OPENROUTER_MODEL ?? "google/gemini-2.5-flash",
-    );
+    const model = gateway(process.env.OPENROUTER_MODEL ?? "google/gemini-2.5-flash");
 
     async function generateWithRetry(prompt: string) {
       const maxAttempts = 3;
@@ -300,7 +309,9 @@ export const scanSite = createServerFn({ method: "POST" })
           let retryAfterSec: number | undefined;
           try {
             retryAfterSec = Number(
-              err?.headers?.get?.("retry-after") ?? err?.response?.headers?.["retry-after"] ?? err?.response?.headers?.["Retry-After"],
+              err?.headers?.get?.("retry-after") ??
+                err?.response?.headers?.["retry-after"] ??
+                err?.response?.headers?.["Retry-After"],
             );
             if (Number.isNaN(retryAfterSec)) retryAfterSec = undefined;
           } catch {}
@@ -324,7 +335,9 @@ export const scanSite = createServerFn({ method: "POST" })
           // add jitter
           const jitter = Math.floor(Math.random() * 300);
           const delayMs = Math.max(baseDelay * expo + jitter, (retryAfterSec ?? 0) * 1000);
-          console.warn(`AI call attempt ${attempt} failed with 429/rate-limit — retrying in ${delayMs}ms`);
+          console.warn(
+            `AI call attempt ${attempt} failed with 429/rate-limit — retrying in ${delayMs}ms`,
+          );
           await new Promise((r) => setTimeout(r, delayMs));
         }
       }

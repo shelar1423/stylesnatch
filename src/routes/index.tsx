@@ -50,12 +50,7 @@ export function Index() {
       <Nav />
       <main className="relative">
         <div className="mx-auto max-w-6xl px-6 pt-12 sm:px-8">
-          <Hero
-            url={url}
-            setUrl={setUrl}
-            onSubmit={submit}
-            isScanning={false}
-          />
+          <Hero url={url} setUrl={setUrl} onSubmit={submit} isScanning={false} />
         </div>
         <div key="landing-sections">
           <Marquee />
@@ -80,8 +75,7 @@ function PaperTexture() {
       <div
         className="absolute inset-0 opacity-[0.35]"
         style={{
-          backgroundImage:
-            "radial-gradient(oklch(0.55 0.02 70 / 0.15) 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(oklch(0.55 0.02 70 / 0.15) 1px, transparent 1px)",
           backgroundSize: "22px 22px",
         }}
       />
@@ -95,7 +89,6 @@ function PaperTexture() {
     </div>
   );
 }
-
 
 /* ---------------- Hero ---------------- */
 
@@ -114,7 +107,9 @@ function Hero({
   isCooling?: boolean;
   cooldownUntil?: number | null;
 }) {
-  const cooldownRemaining = cooldownUntil ? Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000)) : 0;
+  const cooldownRemaining = cooldownUntil
+    ? Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000))
+    : 0;
   return (
     <section id="scan" className="relative scroll-mt-24 -mt-2 pb-6 sm:-mt-6">
       <FloatingDecor />
@@ -131,10 +126,16 @@ function Hero({
           rel="noopener noreferrer"
           animate={{ rotate: [-2, 2, -2, 2, 0] }}
           transition={{ repeat: Infinity, repeatDelay: 4, duration: 0.4 }}
-          whileHover={{ scale: 1.05, rotate: [-2, 2, -2, 2, 0], transition: { repeat: 0, duration: 0.3 } }}
+          whileHover={{
+            scale: 1.05,
+            rotate: [-2, 2, -2, 2, 0],
+            transition: { repeat: 0, duration: 0.3 },
+          }}
           className="animated-pill inline-flex w-fit origin-bottom items-center gap-2 rounded-full border border-transparent bg-card/80 px-3.5 py-1.5 text-xs text-muted-foreground backdrop-blur hover:text-foreground transition-colors"
         >
-          <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">Open Source</span>
+          <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+            Open Source
+          </span>
           <span className="flex items-center gap-1.5">
             Star us on GitHub
             <ArrowRight className="h-3 w-3" />
@@ -178,18 +179,17 @@ function Hero({
         transition={{ duration: 0.7, delay: 0.1 }}
         className="mx-auto mt-3 max-w-xl text-center text-base leading-relaxed text-muted-foreground sm:text-lg"
       >
-        Paste a URL. We extract its typography, color, spacing,
-        components and motion — then hand you a markdown
-        file your agent can read to design in that style.
+        Paste a URL. We extract its typography, color, spacing, components and motion — then hand
+        you a markdown file your agent can read to design in that style.
       </motion.p>
 
-        <motion.form
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
-          onSubmit={onSubmit}
-          className="animated-pill relative mx-auto mt-4 flex w-full max-w-2xl items-center gap-2 rounded-2xl border border-transparent bg-card/90 p-2 shadow-[0_1px_0_oklch(1_0_0_/_0.7)_inset,0_20px_50px_-25px_oklch(0.2_0.02_60_/_0.35)] backdrop-blur"
-        >
+      <motion.form
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.2 }}
+        onSubmit={onSubmit}
+        className="animated-pill relative mx-auto mt-4 flex w-full max-w-2xl items-center gap-2 rounded-2xl border border-transparent bg-card/90 p-2 shadow-[0_1px_0_oklch(1_0_0_/_0.7)_inset,0_20px_50px_-25px_oklch(0.2_0.02_60_/_0.35)] backdrop-blur"
+      >
         <div className="pl-3 pr-1 text-muted-foreground">
           <span className="font-mono text-sm">https://</span>
         </div>
@@ -219,7 +219,7 @@ function Hero({
             </>
           )}
         </button>
-        </motion.form>
+      </motion.form>
 
       {isCooling ? (
         <motion.p
@@ -301,7 +301,12 @@ function FloatingElement({
     >
       <motion.div
         animate={{ y: [-5, 5, -5] }}
-        transition={{ repeat: Infinity, duration: 4 + (delay % 2), ease: "easeInOut", delay: delay + 0.8 }}
+        transition={{
+          repeat: Infinity,
+          duration: 4 + (delay % 2),
+          ease: "easeInOut",
+          delay: delay + 0.8,
+        }}
         whileHover={{ scale: 1.05, y: -5 }}
         whileTap={{ scale: 0.95 }}
         className={`pointer-events-auto ${className || ""}`}
@@ -316,65 +321,130 @@ function FloatingDecor() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 hidden lg:block">
       {/* Left side elements */}
-      <FloatingElement delay={0.3} rotate={-15} className="deco-card-icon" style={{ left: '-12%', top: '5%' }}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'oklch(0.5 0.02 260)' }}>
+      <FloatingElement
+        delay={0.3}
+        rotate={-15}
+        className="deco-card-icon"
+        style={{ left: "-12%", top: "5%" }}
+      >
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ color: "oklch(0.5 0.02 260)" }}
+        >
           <circle cx="12" cy="12" r="3" />
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
         </svg>
       </FloatingElement>
 
-      <FloatingElement delay={0.45} rotate={10} className="deco-card-icon" style={{ left: '-18%', top: '28%' }}>
-        <Grid3X3 className="h-5 w-5" style={{ color: 'oklch(0.4 0.02 260)' }} />
+      <FloatingElement
+        delay={0.45}
+        rotate={10}
+        className="deco-card-icon"
+        style={{ left: "-18%", top: "28%" }}
+      >
+        <Grid3X3 className="h-5 w-5" style={{ color: "oklch(0.4 0.02 260)" }} />
       </FloatingElement>
 
-      <FloatingElement delay={0.6} rotate={-6} className="deco-card" style={{ left: '-10%', top: '52%' }}>
+      <FloatingElement
+        delay={0.6}
+        rotate={-6}
+        className="deco-card"
+        style={{ left: "-10%", top: "52%" }}
+      >
         <div className="flex items-center gap-2">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M2 12 C 4 12, 10 2, 12 2" stroke="oklch(0.5 0.15 170)" strokeWidth="1.5" strokeLinecap="round" />
+            <path
+              d="M2 12 C 4 12, 10 2, 12 2"
+              stroke="oklch(0.5 0.15 170)"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
           </svg>
-          <span style={{ fontSize: '11px' }}>easing · cubic-bezier</span>
+          <span style={{ fontSize: "11px" }}>easing · cubic-bezier</span>
         </div>
       </FloatingElement>
 
-      <FloatingElement delay={0.65} rotate={-5} className="deco-card-icon flex items-center justify-center" style={{ left: '-15%', top: '75%', width: '40px', height: '40px' }}>
-        <div className="h-4 w-4 rounded-full" style={{ backgroundColor: '#E5484D' }} />
+      <FloatingElement
+        delay={0.65}
+        rotate={-5}
+        className="deco-card-icon flex items-center justify-center"
+        style={{ left: "-15%", top: "75%", width: "40px", height: "40px" }}
+      >
+        <div className="h-4 w-4 rounded-full" style={{ backgroundColor: "#E5484D" }} />
       </FloatingElement>
 
-      <FloatingElement delay={0.7} rotate={8} className="deco-card" style={{ left: '-5%', top: '95%' }}>
+      <FloatingElement
+        delay={0.7}
+        rotate={8}
+        className="deco-card"
+        style={{ left: "-5%", top: "95%" }}
+      >
         <div className="flex items-center gap-2">
-          <div className="h-5 w-5 rounded-md" style={{ backgroundColor: '#1a1a1a' }} />
+          <div className="h-5 w-5 rounded-md" style={{ backgroundColor: "#1a1a1a" }} />
           <div>
-            <div style={{ fontSize: '10px', color: '#999' }}>#1A1A1A</div>
-            <div style={{ fontWeight: 600, fontSize: '11px' }}>ink</div>
+            <div style={{ fontSize: "10px", color: "#999" }}>#1A1A1A</div>
+            <div style={{ fontWeight: 600, fontSize: "11px" }}>ink</div>
           </div>
         </div>
       </FloatingElement>
 
       {/* Right side elements */}
-      <FloatingElement delay={0.4} rotate={4} className="deco-card" style={{ right: '-12%', top: '10%' }}>
+      <FloatingElement
+        delay={0.4}
+        rotate={4}
+        className="deco-card"
+        style={{ right: "-12%", top: "10%" }}
+      >
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-md" style={{ backgroundColor: '#5E6AD2' }} />
+          <div className="h-6 w-6 rounded-md" style={{ backgroundColor: "#5E6AD2" }} />
           <div>
-            <div style={{ fontSize: '10px', color: '#999' }}>#5E6AD2</div>
-            <div style={{ fontWeight: 600, fontSize: '11px' }}>primary</div>
+            <div style={{ fontSize: "10px", color: "#999" }}>#5E6AD2</div>
+            <div style={{ fontWeight: 600, fontSize: "11px" }}>primary</div>
           </div>
         </div>
       </FloatingElement>
 
-      <FloatingElement delay={0.5} rotate={-10} className="deco-card-icon" style={{ right: '-18%', top: '32%' }}>
-        <Type className="h-5 w-5" style={{ color: 'oklch(0.3 0.01 60)' }} />
+      <FloatingElement
+        delay={0.5}
+        rotate={-10}
+        className="deco-card-icon"
+        style={{ right: "-18%", top: "32%" }}
+      >
+        <Type className="h-5 w-5" style={{ color: "oklch(0.3 0.01 60)" }} />
       </FloatingElement>
 
-      <FloatingElement delay={0.5} rotate={15} className="deco-card-icon flex items-center justify-center" style={{ right: '-10%', top: '55%', width: '36px', height: '36px' }}>
-        <Zap className="h-4 w-4" style={{ color: 'oklch(0.55 0.12 270)' }} />
+      <FloatingElement
+        delay={0.5}
+        rotate={15}
+        className="deco-card-icon flex items-center justify-center"
+        style={{ right: "-10%", top: "55%", width: "36px", height: "36px" }}
+      >
+        <Zap className="h-4 w-4" style={{ color: "oklch(0.55 0.12 270)" }} />
       </FloatingElement>
 
-      <FloatingElement delay={0.55} rotate={-4} className="deco-card" style={{ right: '-15%', top: '78%' }}>
-        <span style={{ fontSize: '11px' }}>Card · radius 16</span>
+      <FloatingElement
+        delay={0.55}
+        rotate={-4}
+        className="deco-card"
+        style={{ right: "-15%", top: "78%" }}
+      >
+        <span style={{ fontSize: "11px" }}>Card · radius 16</span>
       </FloatingElement>
 
-      <FloatingElement delay={0.75} rotate={5} className="deco-card-icon flex items-center justify-center" style={{ right: '-5%', top: '98%', width: '44px', height: '44px' }}>
-        <Sparkles className="h-5 w-5" style={{ color: '#E5A100' }} />
+      <FloatingElement
+        delay={0.75}
+        rotate={5}
+        className="deco-card-icon flex items-center justify-center"
+        style={{ right: "-5%", top: "98%", width: "44px", height: "44px" }}
+      >
+        <Sparkles className="h-5 w-5" style={{ color: "#E5A100" }} />
       </FloatingElement>
     </div>
   );
@@ -382,7 +452,16 @@ function FloatingDecor() {
 
 /* ---------------- Marquee of compatible agents ---------------- */
 
-const MARQUEE_AGENTS = ["OpenAI Codex", "Claude Code", "Cursor", "GitHub Copilot", "Gemini CLI", "Google Antigravity", "Windsurf", "Roo Code"];
+const MARQUEE_AGENTS = [
+  "OpenAI Codex",
+  "Claude Code",
+  "Cursor",
+  "GitHub Copilot",
+  "Gemini CLI",
+  "Google Antigravity",
+  "Windsurf",
+  "Roo Code",
+];
 
 function Marquee() {
   const doubled = [...MARQUEE_AGENTS, ...MARQUEE_AGENTS];
@@ -452,13 +531,16 @@ function HowItWorks() {
             How it works
           </p>
           <h2 className="font-display text-[clamp(2rem,5vw,3.5rem)] leading-tight tracking-tight">
-            Three steps from{" "}
-            <br className="hidden sm:block" />
-            URL to <span className="font-sans font-medium italic text-accent">agent-ready</span> skill.
+            Three steps from <br className="hidden sm:block" />
+            URL to <span className="font-sans font-medium italic text-accent">
+              agent-ready
+            </span>{" "}
+            skill.
           </h2>
         </div>
         <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
-          Behind the scenes: Firecrawl scrapes the page, extracts the HTML, CSS, branding and screenshots, and AI analyses everything together.
+          Behind the scenes: Firecrawl scrapes the page, extracts the HTML, CSS, branding and
+          screenshots, and AI analyses everything together.
         </p>
       </div>
 
@@ -472,17 +554,11 @@ function HowItWorks() {
             transition={{ duration: 0.5, delay: i * 0.08 }}
             className="group relative overflow-hidden rounded-2xl border border-border/80 bg-card/80 p-6 backdrop-blur transition-transform hover:-translate-y-1"
           >
-            <div className="mb-8 font-mono text-xs text-muted-foreground/60">
-              {step.num}
-            </div>
+            <div className="mb-8 font-mono text-xs text-muted-foreground/60">{step.num}</div>
             <div className="flex items-end justify-between">
               <div>
-                <h3 className="font-display text-2xl tracking-tight sm:text-3xl">
-                  {step.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {step.body}
-                </p>
+                <h3 className="font-display text-2xl tracking-tight sm:text-3xl">{step.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
               </div>
             </div>
           </motion.div>
@@ -490,13 +566,16 @@ function HowItWorks() {
       </div>
 
       {/* Example output */}
-      <div id="example" className="mt-16 scroll-mt-24 rounded-2xl border border-border/70 bg-card/70 p-8 backdrop-blur">
+      <div
+        id="example"
+        className="mt-16 scroll-mt-24 rounded-2xl border border-border/70 bg-card/70 p-8 backdrop-blur"
+      >
         <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-muted-foreground">
           <FileCode2 className="h-3.5 w-3.5" />
           example output
         </div>
         <pre className="mt-4 overflow-x-auto rounded-xl bg-foreground/[0.04] p-4 font-mono text-[13px] leading-6 text-foreground/80">
-{`---
+          {`---
 name: linear-style
 description: Replicates the visual style of linear.app...
 ---
@@ -553,7 +632,9 @@ function WhatWeCapture() {
         What we capture
       </p>
       <h2 className="max-w-lg font-display text-[clamp(2rem,5vw,3.5rem)] leading-tight tracking-tight">
-        We read the <span className="font-sans font-medium italic text-accent">invisible grammar</span> of a website.
+        We read the{" "}
+        <span className="font-sans font-medium italic text-accent">invisible grammar</span> of a
+        website.
       </h2>
 
       <div className="mt-12 grid gap-4 sm:grid-cols-2">
@@ -567,14 +648,10 @@ function WhatWeCapture() {
             className={`group rounded-2xl border border-border/70 p-7 transition-transform hover:-translate-y-1 bg-card/40 backdrop-blur`}
           >
             <div className="mb-5 flex items-center gap-3">
-              <div className="text-foreground/70">
-                {feat.icon}
-              </div>
+              <div className="text-foreground/70">{feat.icon}</div>
             </div>
             <h3 className="font-semibold text-lg tracking-tight">{feat.title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              {feat.body}
-            </p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{feat.body}</p>
           </motion.div>
         ))}
       </div>
@@ -600,10 +677,7 @@ function StealDivider() {
   );
 }
 
-
-
 /* ---------------- Scanning state ---------------- */
-
 
 function PoweredBy() {
   return (
@@ -615,15 +689,17 @@ function PoweredBy() {
     >
       {/* Subtle background glow */}
       <div className="pointer-events-none absolute inset-x-0 -top-24 mx-auto h-48 w-full max-w-md rounded-full bg-accent/15 blur-3xl" />
-      
+
       <h2 className="relative font-display text-[clamp(2rem,5vw,3rem)] leading-tight tracking-tight">
         Powered by the best. <br className="hidden sm:block" />
         <span className="font-sans font-medium italic text-accent">Yours to modify.</span>
       </h2>
       <p className="relative mx-auto mt-6 max-w-2xl text-muted-foreground text-sm sm:text-base leading-relaxed">
-        Stylesnatch uses <strong className="text-foreground">Firecrawl</strong> to deeply scan website structure, and <strong className="text-foreground">Gemini 2.5 Flash</strong> (via OpenRouter) to distill that data into an elegant design system. 
+        Stylesnatch uses <strong className="text-foreground">Firecrawl</strong> to deeply scan
+        website structure, and <strong className="text-foreground">Gemini 2.5 Flash</strong> (via
+        OpenRouter) to distill that data into an elegant design system.
       </p>
-      
+
       <div className="relative mt-10 flex flex-col items-center justify-center gap-5">
         <a
           href="https://github.com/shelar1423/stylesnatch#local-setup-instructions"
@@ -649,9 +725,7 @@ function Footer() {
     <footer className="relative mx-auto max-w-6xl px-6 pb-12 sm:px-8">
       <div className="flex flex-col items-start justify-between gap-6 border-t border-border/60 pt-8 sm:flex-row sm:items-end">
         <div>
-          <div className="font-display text-3xl tracking-tight">
-            Snatch. Distill. Ship.
-          </div>
+          <div className="font-display text-3xl tracking-tight">Snatch. Distill. Ship.</div>
           <div className="mt-1 text-sm text-muted-foreground">
             100% Open source. Built for prompt-engineers who love a good design system.
           </div>
@@ -664,26 +738,44 @@ function Footer() {
               className="font-medium text-foreground/80 underline decoration-accent/40 underline-offset-2 transition-colors hover:text-foreground hover:decoration-accent"
             >
               Digvijay Shelar
-            </a>
-            {" "}— developer turned UX designer, building tools at the intersection of design and AI.
+            </a>{" "}
+            — developer turned UX designer, building tools at the intersection of design and AI.
           </div>
           <div className="mt-6 flex items-center gap-4 text-muted-foreground">
-            <a href="https://www.linkedin.com/in/digvijayshelar/" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+            <a
+              href="https://www.linkedin.com/in/digvijayshelar/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
               <Linkedin className="h-4 w-4" />
               <span className="sr-only">LinkedIn</span>
             </a>
-            <a href="mailto:digvijayux@gmail.com" className="hover:text-foreground transition-colors">
+            <a
+              href="mailto:digvijayux@gmail.com"
+              className="hover:text-foreground transition-colors"
+            >
               <Mail className="h-4 w-4" />
               <span className="sr-only">Email</span>
             </a>
-            <a href="https://instagram.com/digvijayux" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+            <a
+              href="https://instagram.com/digvijayux"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
               <Instagram className="h-4 w-4" />
               <span className="sr-only">Instagram</span>
             </a>
           </div>
         </div>
         <div className="flex items-center gap-6 text-xs font-mono text-muted-foreground">
-          <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors flex items-center gap-1.5">
+          <a
+            href="https://github.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-foreground transition-colors flex items-center gap-1.5"
+          >
             <Github className="h-3.5 w-3.5" />
             GitHub
           </a>
