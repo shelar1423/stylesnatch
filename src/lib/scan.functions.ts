@@ -194,12 +194,13 @@ export const scanSite = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<ScanResult> => {
     const url = normalizeUrl(data.url);
     const firecrawlKey = process.env.FIRECRAWL_API_KEY ?? process.env.VITE_FIRECRAWL_API_KEY;
-    const openRouterKey = process.env.OPENROUTER_API_KEY ?? process.env.VITE_OPENROUTER_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY ?? process.env.VITE_GEMINI_API_KEY;
+
     if (!firecrawlKey)
       throw new Error("Firecrawl is not connected. Set FIRECRAWL_API_KEY in your environment.");
-    if (!openRouterKey) {
+    if (!geminiKey) {
       console.warn(
-        "OpenRouter key is not configured; the built-in fallback skill template will be used.",
+        "Gemini API key is not configured; the built-in fallback skill template will be used.",
       );
     }
 
@@ -270,12 +271,12 @@ export const scanSite = createServerFn({ method: "POST" })
       }
     }
 
-    // 3) Ask OpenRouter to synthesize a SKILL.md
-    const { createOpenRouterGatewayProvider } = await import("./ai-gateway.server");
+    // 3) Ask Gemini to synthesize a SKILL.md
+    const { createGeminiGatewayProvider } = await import("./ai-gateway.server");
     const { generateText } = await import("ai");
 
-    const gateway = createOpenRouterGatewayProvider(openRouterKey as string);
-    const model = gateway(process.env.OPENROUTER_MODEL ?? "google/gemini-2.5-flash");
+    const gateway = createGeminiGatewayProvider(geminiKey as string);
+    const model = gateway(process.env.GEMINI_MODEL ?? "gemini-2.5-flash");
 
     async function generateWithRetry(prompt: string) {
       const maxAttempts = 3;
@@ -294,7 +295,7 @@ export const scanSite = createServerFn({ method: "POST" })
           const is429 = /too many requests|rate limit|429|rateLimit/i.test(msg);
 
           if (shouldUseFallback(err)) {
-            console.warn("OpenRouter unavailable, using built-in fallback skill template.");
+            console.warn("Gemini unavailable, using built-in fallback skill template.");
             return buildFallbackSkillMarkdown({
               siteName,
               url,
@@ -326,7 +327,7 @@ export const scanSite = createServerFn({ method: "POST" })
 
           try {
             if (retryAfterSec) {
-              apiCooldowns.set(openRouterKey as string, Date.now() + retryAfterSec * 1000);
+              apiCooldowns.set(geminiKey as string, Date.now() + retryAfterSec * 1000);
             }
           } catch (e) {
             console.error("Failed to set cooldown", e);
@@ -346,7 +347,7 @@ export const scanSite = createServerFn({ method: "POST" })
     }
 
     // if we recently saw a Retry-After for this api key, fail fast with guidance
-    const cooldownUntil = apiCooldowns.get(openRouterKey as string);
+    const cooldownUntil = apiCooldowns.get(geminiKey as string);
     if (cooldownUntil && Date.now() < cooldownUntil) {
       const sec = Math.ceil((cooldownUntil - Date.now()) / 1000);
       throw new Error(`AI_RATE_LIMIT: Retry after ${sec}s`);
