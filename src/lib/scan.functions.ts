@@ -97,7 +97,10 @@ function buildFallbackSkillMarkdown(args: {
   const cssVarLines = paletteEntries
     .map(
       ([name, value]) =>
-        `  --${name.replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase()}: ${value};`,
+        `  --${name
+          .replace(/[^a-z0-9]+/gi, "-")
+          .replace(/^-+|-+$/g, "")
+          .toLowerCase()}: ${value};`,
     )
     .join("\n");
 
@@ -112,7 +115,12 @@ function buildFallbackSkillMarkdown(args: {
   const headings = Array.from(
     new Set(
       (args.primaryMarkdown.match(/^#{1,3} .+$/gm) ?? [])
-        .map((h) => h.replace(/^#+\s*/, "").replace(/[*_`]/g, "").trim())
+        .map((h) =>
+          h
+            .replace(/^#+\s*/, "")
+            .replace(/[*_`]/g, "")
+            .trim(),
+        )
         .filter((h) => h.length > 2 && h.length < 90),
     ),
   ).slice(0, 8);
