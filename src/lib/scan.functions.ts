@@ -82,12 +82,55 @@ function buildFallbackSkillMarkdown(args: {
   secondaryMarkdowns: Array<{ url: string; markdown: string }>;
 }): string {
   const slug = slugFromUrl(args.url);
-  const palette = args.branding?.colors
-    ? Object.entries(args.branding.colors)
-        .slice(0, 6)
-        .map(([name, value]) => `- ${name}: ${value}`)
-        .join("\n")
-    : "- background: #FAF7EE\n- foreground: #111111\n- accent: #5B6CFF";
+
+  const colorEntries = Object.entries(args.branding?.colors ?? {}).filter(
+    ([, v]) => typeof v === "string" && v.trim().length > 0,
+  );
+  const paletteEntries: Array<[string, string]> = colorEntries.length
+    ? colorEntries.slice(0, 14)
+    : [
+        ["background", "#FAF7EE"],
+        ["foreground", "#111111"],
+        ["accent", "#5B6CFF"],
+      ];
+  const palette = paletteEntries.map(([name, value]) => `- ${name}: ${value}`).join("\n");
+  const cssVarLines = paletteEntries
+    .map(
+      ([name, value]) =>
+        `  --${name
+          .replace(/[^a-z0-9]+/gi, "-")
+          .replace(/^-+|-+$/g, "")
+          .toLowerCase()}: ${value};`,
+    )
+    .join("\n");
+
+  const fonts = (args.branding?.fonts ?? [])
+    .map((f) => f.family)
+    .filter((f): f is string => Boolean(f && f.trim()));
+  const displayFont = fonts[0] ?? "Inter";
+  const bodyFont = fonts[1] ?? fonts[0] ?? "Inter";
+
+  // Pull real headlines and CTA labels out of the scraped markdown so even
+  // the no-AI path stays specific to this site.
+  const headings = Array.from(
+    new Set(
+      (args.primaryMarkdown.match(/^#{1,3} .+$/gm) ?? [])
+        .map((h) =>
+          h
+            .replace(/^#+\s*/, "")
+            .replace(/[*_`]/g, "")
+            .trim(),
+        )
+        .filter((h) => h.length > 2 && h.length < 90),
+    ),
+  ).slice(0, 8);
+  const ctas = Array.from(
+    new Set(
+      Array.from(args.primaryMarkdown.matchAll(/\[([^\]\n]{2,30})\]\([^)]+\)/g))
+        .map((m) => m[1].replace(/[*_`]/g, "").trim())
+        .filter((t) => /^[A-Za-z][A-Za-z0-9\s'&+.-]*$/.test(t) && t.split(/\s+/).length <= 4),
+    ),
+  ).slice(0, 8);
   const title = args.metadata.title || args.siteName || args.url;
   const description =
     args.metadata.description ||
@@ -113,11 +156,26 @@ This skill is intended to help an AI agent reproduce a landing page or marketing
 ## Palette
 ${palette}
 
+## CSS Variables
+\`\`\`css
+:root {
+${cssVarLines}
+  --font-display: "${displayFont}", sans-serif;
+  --font-body: "${bodyFont}", sans-serif;
+  --radius-card: 24px;
+  --radius-pill: 9999px;
+  --shadow-panel: 0 24px 80px rgba(17, 17, 17, 0.08);
+  --space-section: 5rem;
+}
+\`\`\`
+
 ## Typography
-- Display: Inter, SemiBold, 3rem / 48px, tracking -0.02em.
-- Heading: Inter, Medium, 2rem / 32px, strong visual hierarchy.
-- Body: Inter, Regular, 1rem / 16px, line-height 1.6.
-- Accent labels: uppercase, 0.08em letter-spacing, muted tone.
+- Display: ${displayFont}, SemiBold, 3rem / 48px, tracking -0.02em.
+- Heading: ${displayFont}, Medium, 2rem / 32px, strong visual hierarchy.
+- Body: ${bodyFont}, Regular, 1rem / 16px, line-height 1.6.
+- Accent labels: uppercase, 0.08em letter-spacing, muted tone.${
+    fonts.length ? `\n- Font families detected on the site: ${fonts.join(", ")}.` : ""
+  }
 
 ## Spacing & Layout
 - Page max-width: 1200px.
@@ -128,6 +186,13 @@ ${palette}
 - Shadow: 0 24px 80px rgba(17, 17, 17, 0.08) for elevated panels.
 
 ## Page Build Plan
+${
+  headings.length
+    ? `Real section headings observed on the homepage — rebuild in this order:\n${headings
+        .map((h, i) => `${i + 1}. "${h}"`)
+        .join("\n")}\n\nGeneric flow to fill any gaps:`
+    : ""
+}
 1. Hero
    - Large left-aligned heading with bold weight, a short supporting paragraph, and two CTA buttons.
    - Use a strong accent primary button and a secondary ghost button.
@@ -158,8 +223,18 @@ ${palette}
 
 ## Voice & Copy
 - Tone: confident, polished, modern, and approachable.
-- Headline style: short, declarative, value-driven.
-- CTA examples: "Start building", "Explore the product", "See it in action".
+- Headline style: short, declarative, value-driven.${
+    headings.length
+      ? `\n- Real headlines from the site (mirror this voice):\n${headings
+          .map((h) => `  - "${h}"`)
+          .join("\n")}`
+      : ""
+  }
+- CTA examples: ${
+    ctas.length
+      ? ctas.map((c) => `"${c}"`).join(", ")
+      : `"Start building", "Explore the product", "See it in action"`
+  }.
 - Support copy: 1-2 short sentences that clarify the benefit and reduce friction.
 
 ## Imagery & Decoration
@@ -214,6 +289,34 @@ const GEMINI_MODEL_CHAIN = Array.from(
     "gemini-3.1-flash-lite",
   ]),
 );
+
+// A SKILL.md is only useful if an agent can build from it without guessing.
+// These checks catch the thin output weaker fallback models tend to produce.
+function skillQualityIssues(md: string): string[] {
+  const issues: string[] = [];
+  if (md.length < 4500) {
+    issues.push("the file is too short — every section needs concrete, copy-pastable detail");
+  }
+  const hexCount = new Set(md.match(/#[0-9a-fA-F]{6}\b/g) ?? []).size;
+  if (hexCount < 5) issues.push("fewer than 5 concrete hex color values");
+  if (!/:root/.test(md)) issues.push("missing the :root CSS custom-properties block");
+  for (const section of ["## Layout", "## Motion", "## Voice", "## Do", "## Usage"]) {
+    if (!md.includes(section)) issues.push(`missing the "${section}" section`);
+  }
+  return issues;
+}
+
+function buildExpandPrompt(originalPrompt: string, draft: string, issues: string[]): string {
+  return `${originalPrompt}
+
+=== PREVIOUS DRAFT (not detailed enough) ===
+${draft}
+
+The draft above is too thin to act as a build spec. Problems found:
+${issues.map((i) => `- ${i}`).join("\n")}
+
+Rewrite the COMPLETE SKILL.md file. Keep everything that is already good and expand every section with concrete, copy-pastable specifics: hex values, px/rem sizes, font weights, exact CSS/Tailwind class suggestions, and verbatim copy examples from the scraped content. Return ONLY the raw markdown of the full file, no preamble.`;
+}
 
 export const scanSite = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ScanInput.parse(input))
@@ -321,6 +424,28 @@ export const scanSite = createServerFn({ method: "POST" })
               // switching are handled here where we control the timing.
               maxRetries: 1,
             });
+
+            const issues = skillQualityIssues(res.text);
+            if (issues.length === 0) return res.text;
+
+            // Weaker fallback models tend to produce thin files. One repair
+            // pass asking the same model to expand usually closes the gap.
+            console.warn(
+              `SKILL.md draft from ${modelId} is thin (${issues.join("; ")}) — running one expansion pass.`,
+            );
+            try {
+              const repaired = await generateText({
+                model,
+                prompt: buildExpandPrompt(prompt, res.text, issues),
+                temperature: 0.2,
+                maxRetries: 1,
+              });
+              if (skillQualityIssues(repaired.text).length < issues.length) {
+                return repaired.text;
+              }
+            } catch (repairErr) {
+              console.warn("Expansion pass failed; keeping the original draft.", repairErr);
+            }
             return res.text;
           } catch (err: unknown) {
             console.error(`generateText error (${modelId}, attempt ${attempt}):`, err);
@@ -433,8 +558,10 @@ description: Replicates the visual style of ${siteName} — use when the user as
 ---
 2. Then include these sections, in this order, with concrete, copy-pastable specifics (hex values, font names, px/rem scales, keywords). Infer confidently from the scraped data; do not hedge.
 
+## Style Summary
 2-3 sentences describing the overall aesthetic and mood (e.g. "playful editorial, tactile, floating decorative props on off-white paper").
 
+## Design Tokens
 - Palette (name each color role + hex)
 - Typography (display / body / mono font families, weights, tracking, sample scale in rem)
 - Spacing scale, border radius, shadow style
@@ -471,7 +598,14 @@ Important style rules:
 - Make this feel like a build spec for a real implementation, not a loose design summary.
 - If the site is marketing-oriented, prioritize landing-page reproduction and section-by-section implementation detail.
 
-Keep the whole file under ~500 lines.`;
+Depth requirements (non-negotiable — thin output is a failure):
+- Target 300-500 lines; never fewer than 200.
+- Palette: list every color you can extract (aim for 8-14), each as "role: #hex — where it is used".
+- The :root block must define at least 12 semantic custom properties (colors, fonts, radii, shadows, spacing).
+- Layout & Composition: walk the homepage top to bottom and document EVERY section in the order it appears (nav, hero, features, proof, CTA, footer, ...), each under its own sub-heading with exact specs — an agent must be able to rebuild the page section by section from this alone.
+- Voice & Copy: quote at least 5 real headlines / CTA labels verbatim from the scraped content.
+- Never write "varies", "unknown", or "it depends" — if a value is not directly visible, infer a specific plausible value and state it confidently.
+- Acid test: an agent given ONLY this file and the prompt "build a landing page" must produce a page that looks unmistakably like ${siteName}. Every decision it needs must be answered here.`;
 
     const skillMarkdown = await generateWithRetry(prompt);
 

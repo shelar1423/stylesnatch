@@ -10,3 +10,14 @@
 > the editor, so keep the branch in a working state.
 
 <!-- LOVABLE:END -->
+
+## Before pushing
+
+CI runs Prettier in strict `--check` mode, so any unformatted line fails the
+build. Run these locally before committing/pushing — all must pass:
+
+```bash
+npm run format         # auto-fix formatting (or format:check to only verify)
+npm run lint           # eslint
+npm run typecheck      # tsc --noEmit
+```
