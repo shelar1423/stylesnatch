@@ -291,7 +291,6 @@ export const scanSite = createServerFn({ method: "POST" })
           const res = await generateText({
             model,
             prompt,
-            maxTokens: 1400,
             temperature: 0.2,
           });
           return res.text;
