@@ -4,32 +4,19 @@ import { z } from "zod";
 // Simple in-memory cooldowns to prevent repeated immediate calls after a 429.
 const apiCooldowns = new Map<string, number>();
 
-// Simple in-memory concurrency limiter and cache to avoid bursts during rapid testing.
-const maxConcurrent = 2;
-let currentConcurrent = 0;
-const pendingQueue: Array<() => void> = [];
-
-function acquireSlot(): Promise<() => void> {
-  return new Promise((resolve) => {
-    const tryAcquire = () => {
-      if (currentConcurrent < maxConcurrent) {
-        currentConcurrent++;
-        resolve(() => {
-          currentConcurrent--;
-          // flush next
-          const next = pendingQueue.shift();
-          if (next) next();
-        });
-      } else {
-        pendingQueue.push(tryAcquire);
-      }
-    };
-    tryAcquire();
-  });
-}
-
-// Very small in-memory cache keyed by URL for dev/testing (10 minute TTL)
-const scanCache = new Map<string, { expires: number; result: unknown }>();
+// Cache the expensive Firecrawl scrape payload per URL so retries and repeat
+// scans don't re-spend credits. A site's design doesn't change minute to
+// minute; only the (cheaper) AI synthesis is re-run on a cache hit.
+type ScrapeCacheEntry = {
+  expires: number;
+  primaryMarkdown: string;
+  screenshot: string | null;
+  branding: BrandingPayload | null;
+  metadata: Record<string, string>;
+  secondaryMarkdowns: Array<{ url: string; markdown: string }>;
+};
+const scrapeCache = new Map<string, ScrapeCacheEntry>();
+const SCRAPE_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 const ScanInput = z.object({
   url: z.string().min(1),
@@ -71,6 +58,59 @@ function slugFromUrl(u: string): string {
   } catch {
     return "site";
   }
+}
+
+// Pages that add little to a *visual* style guide — skip them to save credits.
+const JUNK_PATH =
+  /\/(login|sign-?in|sign-?up|register|logout|privacy|terms|tos|legal|cookies?|gdpr|careers?|jobs|support|help|account|cart|checkout|password|reset|refund|returns?|shipping)(\/|$|\?)/i;
+// Pages that usually showcase the design language strongly.
+const VALUE_PATH =
+  /\/(pricing|prices?|plans?|about|features?|product|solutions?|services?|how-it-works|use-cases?|customers?|showcase|gallery|examples?|why)/i;
+
+// Each secondary page costs a Firecrawl credit, so pick a few high-value
+// same-origin pages rather than the first N links we happen to find.
+function selectSecondaryUrls(baseUrl: string, links: string[], max: number): string[] {
+  if (max <= 0) return [];
+  let origin = "";
+  try {
+    origin = new URL(baseUrl).origin;
+  } catch {
+    return [];
+  }
+  const seen = new Set<string>();
+  const candidates: string[] = [];
+  for (const l of links) {
+    if (typeof l !== "string" || !l.startsWith(origin) || l === baseUrl) continue;
+    const clean = l.split("#")[0];
+    if (clean === baseUrl || seen.has(clean)) continue;
+    if (/\.(png|jpe?g|gif|svg|webp|pdf|zip|mp4|css|js)(\?|$)/i.test(clean)) continue;
+    if (JUNK_PATH.test(clean)) continue;
+    seen.add(clean);
+    candidates.push(clean);
+  }
+  const depth = (u: string) => {
+    try {
+      return new URL(u).pathname.split("/").filter(Boolean).length;
+    } catch {
+      return 99;
+    }
+  };
+  // High-value pages first, then shallower paths (top-level > deep permalinks).
+  candidates.sort((a, b) => {
+    const va = VALUE_PATH.test(a) ? 1 : 0;
+    const vb = VALUE_PATH.test(b) ? 1 : 0;
+    if (va !== vb) return vb - va;
+    return depth(a) - depth(b);
+  });
+  return candidates.slice(0, max);
+}
+
+// When the homepage + branding already carry the palette, fonts, and enough
+// copy, we can scrape fewer secondary pages without hurting quality.
+function brandingIsRich(branding: BrandingPayload | null, markdown: string): boolean {
+  const colorCount = Object.values(branding?.colors ?? {}).filter(Boolean).length;
+  const hasFonts = (branding?.fonts ?? []).some((f) => Boolean(f?.family));
+  return colorCount >= 4 && hasFonts && markdown.length > 6000;
 }
 
 function buildFallbackSkillMarkdown(args: {
@@ -333,71 +373,84 @@ export const scanSite = createServerFn({ method: "POST" })
       );
     }
 
-    const { default: Firecrawl } = await import("@mendable/firecrawl-js");
-    const firecrawl = new Firecrawl({ apiKey: firecrawlKey });
+    // Scrape-derived inputs, served from cache when possible so retries and
+    // repeat scans of the same URL don't re-spend Firecrawl credits.
+    let primaryMarkdown: string;
+    let screenshot: string | null;
+    let branding: BrandingPayload | null;
+    let metadata: Record<string, string>;
+    let secondaryMarkdowns: Array<{ url: string; markdown: string }>;
 
-    // 1) Primary scrape: branding + markdown + screenshot + links
-    const primary = (await firecrawl.scrape(url, {
-      formats: ["markdown", "screenshot", "links", "branding"],
-      onlyMainContent: false,
-    })) as Record<string, unknown>;
+    const cached = scrapeCache.get(url);
+    if (cached && Date.now() < cached.expires) {
+      ({ primaryMarkdown, screenshot, branding, metadata, secondaryMarkdowns } = cached);
+      console.log(`Firecrawl cache hit for ${url} — skipping scrape (0 credits spent).`);
+    } else {
+      const { default: Firecrawl } = await import("@mendable/firecrawl-js");
+      const firecrawl = new Firecrawl({ apiKey: firecrawlKey });
 
-    const primaryMarkdown =
-      (primary.markdown as string | undefined) ??
-      (primary.data as { markdown?: string } | undefined)?.markdown ??
-      "";
-    const screenshot =
-      (primary.screenshot as string | undefined) ??
-      (primary.data as { screenshot?: string } | undefined)?.screenshot ??
-      null;
-    const branding =
-      (primary.branding as BrandingPayload | undefined) ??
-      (primary.data as { branding?: BrandingPayload } | undefined)?.branding ??
-      null;
-    const metadata =
-      (primary.metadata as Record<string, string> | undefined) ??
-      (primary.data as { metadata?: Record<string, string> } | undefined)?.metadata ??
-      {};
-    const links: string[] =
-      (primary.links as string[] | undefined) ??
-      (primary.data as { links?: string[] } | undefined)?.links ??
-      [];
+      // 1) Primary scrape: branding + markdown + screenshot + links (1 credit)
+      const primary = (await firecrawl.scrape(url, {
+        formats: ["markdown", "screenshot", "links", "branding"],
+        onlyMainContent: false,
+      })) as Record<string, unknown>;
 
-    // 2) Pick a small set of same-origin secondary pages (up to 6) for richer coverage
-    let origin = "";
-    try {
-      origin = new URL(url).origin;
-    } catch {
-      // ignore
-    }
-    const secondaryUrls = Array.from(
-      new Set(
-        links
-          .filter((l): l is string => typeof l === "string" && l.startsWith(origin) && l !== url)
-          .map((l) => l.split("#")[0])
-          .filter((l) => !/\.(png|jpe?g|gif|svg|webp|pdf|zip|mp4|css|js)(\?|$)/i.test(l)),
-      ),
-    ).slice(0, 6);
+      primaryMarkdown =
+        (primary.markdown as string | undefined) ??
+        (primary.data as { markdown?: string } | undefined)?.markdown ??
+        "";
+      screenshot =
+        (primary.screenshot as string | undefined) ??
+        (primary.data as { screenshot?: string } | undefined)?.screenshot ??
+        null;
+      branding =
+        (primary.branding as BrandingPayload | undefined) ??
+        (primary.data as { branding?: BrandingPayload } | undefined)?.branding ??
+        null;
+      metadata =
+        (primary.metadata as Record<string, string> | undefined) ??
+        (primary.data as { metadata?: Record<string, string> } | undefined)?.metadata ??
+        {};
+      const links: string[] =
+        (primary.links as string[] | undefined) ??
+        (primary.data as { links?: string[] } | undefined)?.links ??
+        [];
 
-    const secondaryMarkdowns: Array<{ url: string; markdown: string }> = [];
-    if (secondaryUrls.length > 0) {
-      try {
-        const batch = (await firecrawl.batchScrape(secondaryUrls, {
-          options: { formats: ["markdown"], onlyMainContent: true },
-        })) as unknown as Record<string, unknown>;
-        const items =
-          (batch.data as Array<Record<string, unknown>> | undefined) ??
-          (Array.isArray(batch) ? (batch as Array<Record<string, unknown>>) : []);
-        for (const item of items) {
-          const md = (item.markdown as string | undefined) ?? "";
-          const meta = item.metadata as { sourceURL?: string } | undefined;
-          if (md && meta?.sourceURL) {
-            secondaryMarkdowns.push({ url: meta.sourceURL, markdown: md.slice(0, 4000) });
+      // 2) Scrape a few high-value same-origin pages for richer coverage.
+      //    Each page costs 1 credit, so cap the count (fewer when the homepage
+      //    is already rich) and skip junk pages (login/legal/etc.).
+      secondaryMarkdowns = [];
+      const maxSecondary = brandingIsRich(branding, primaryMarkdown) ? 2 : 3;
+      const secondaryUrls = selectSecondaryUrls(url, links, maxSecondary);
+
+      if (secondaryUrls.length > 0) {
+        try {
+          const batch = (await firecrawl.batchScrape(secondaryUrls, {
+            options: { formats: ["markdown"], onlyMainContent: true },
+          })) as unknown as Record<string, unknown>;
+          const items =
+            (batch.data as Array<Record<string, unknown>> | undefined) ??
+            (Array.isArray(batch) ? (batch as Array<Record<string, unknown>>) : []);
+          for (const item of items) {
+            const md = (item.markdown as string | undefined) ?? "";
+            const meta = item.metadata as { sourceURL?: string } | undefined;
+            if (md && meta?.sourceURL) {
+              secondaryMarkdowns.push({ url: meta.sourceURL, markdown: md.slice(0, 4000) });
+            }
           }
+        } catch (err) {
+          console.warn("secondary batchScrape failed", err);
         }
-      } catch (err) {
-        console.warn("secondary batchScrape failed", err);
       }
+
+      scrapeCache.set(url, {
+        expires: Date.now() + SCRAPE_CACHE_TTL_MS,
+        primaryMarkdown,
+        screenshot,
+        branding,
+        metadata,
+        secondaryMarkdowns,
+      });
     }
 
     // 3) Ask Gemini to synthesize a SKILL.md
