@@ -195,6 +195,26 @@ function shouldUseFallback(err: unknown): boolean {
   );
 }
 
+// Overload / throttling errors are transient on Google's side — worth retrying
+// and worth trying a different model (each model has its own capacity pool).
+function isTransientAiError(err: unknown): boolean {
+  const msg = String((err as { message?: string })?.message ?? err ?? "");
+  return /high demand|overloaded|unavailable|resource.?exhausted|too many requests|rate.?limit|429|503/i.test(
+    msg,
+  );
+}
+
+// Tried in order; overload on one model rarely affects the others.
+// (gemini-2.0-flash is deliberately absent — this project's key has zero
+// free-tier quota for it.)
+const GEMINI_MODEL_CHAIN = Array.from(
+  new Set([
+    process.env.GEMINI_MODEL ?? "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-3.1-flash-lite",
+  ]),
+);
+
 export const scanSite = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ScanInput.parse(input))
   .handler(async ({ data }): Promise<ScanResult> => {
@@ -282,80 +302,101 @@ export const scanSite = createServerFn({ method: "POST" })
     const { generateText } = await import("ai");
 
     const gateway = createGeminiGatewayProvider(geminiKey as string);
-    const model = gateway(process.env.GEMINI_MODEL ?? "gemini-2.5-flash");
 
+    // Never throws: walks the model chain retrying transient errors, and if
+    // every model fails, returns the built-in fallback template.
     async function generateWithRetry(prompt: string) {
-      const maxAttempts = 3;
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        try {
-          const res = await generateText({
-            model,
-            prompt,
-            temperature: 0.2,
-          });
-          return res.text;
-        } catch (err: unknown) {
-          console.error("generateText error:", err);
-          const msg = String((err as { message?: string })?.message ?? err);
-          const is429 = /too many requests|rate limit|429|rateLimit/i.test(msg);
+      const attemptsPerModel = 2;
 
-          if (shouldUseFallback(err)) {
-            console.warn("Gemini unavailable, using built-in fallback skill template.");
-            return buildFallbackSkillMarkdown({
-              siteName,
-              url,
-              branding,
-              metadata,
-              primaryMarkdown,
-              secondaryMarkdowns,
+      for (const modelId of GEMINI_MODEL_CHAIN) {
+        const model = gateway(modelId);
+
+        for (let attempt = 1; attempt <= attemptsPerModel; attempt++) {
+          try {
+            const res = await generateText({
+              model,
+              prompt,
+              temperature: 0.2,
+              // Keep the AI SDK's internal retry short — backoff and model
+              // switching are handled here where we control the timing.
+              maxRetries: 1,
             });
-          }
+            return res.text;
+          } catch (err: unknown) {
+            console.error(`generateText error (${modelId}, attempt ${attempt}):`, err);
 
-          // Try to read a Retry-After value if available on common shapes
-          let retryAfterSec: number | undefined;
-          try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const e = err as any;
-            const header =
-              e?.headers?.get?.("retry-after") ??
-              e?.response?.headers?.["retry-after"] ??
-              e?.response?.headers?.["Retry-After"];
-            retryAfterSec = Number(header);
-            if (Number.isNaN(retryAfterSec)) retryAfterSec = undefined;
-          } catch {
-            retryAfterSec = undefined;
-          }
+            // Auth / billing / network errors won't heal by switching models.
+            if (shouldUseFallback(err)) {
+              console.warn("Gemini unavailable, using built-in fallback skill template.");
+              return buildFallbackSkillMarkdown({
+                siteName,
+                url,
+                branding,
+                metadata,
+                primaryMarkdown,
+                secondaryMarkdowns,
+              });
+            }
 
-          if (!is429 || attempt === maxAttempts) {
-            throw err;
-          }
+            // Unknown (non-transient) errors: don't burn time retrying the
+            // same model, but do give the rest of the chain a chance.
+            if (!isTransientAiError(err)) break;
 
-          try {
+            // Try to read a Retry-After value if available on common shapes
+            let retryAfterSec: number | undefined;
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const e = err as any;
+              const header =
+                e?.headers?.get?.("retry-after") ??
+                e?.response?.headers?.["retry-after"] ??
+                e?.response?.headers?.["Retry-After"];
+              retryAfterSec = Number(header);
+              if (Number.isNaN(retryAfterSec)) retryAfterSec = undefined;
+            } catch {
+              retryAfterSec = undefined;
+            }
+
             if (retryAfterSec) {
               apiCooldowns.set(geminiKey as string, Date.now() + retryAfterSec * 1000);
             }
-          } catch (e) {
-            console.error("Failed to set cooldown", e);
-          }
 
-          const baseDelay = 500;
-          const expo = Math.pow(2, attempt - 1);
-          const jitter = Math.floor(Math.random() * 300);
-          const delayMs = Math.max(baseDelay * expo + jitter, (retryAfterSec ?? 0) * 1000);
-          console.warn(
-            `AI call attempt ${attempt} failed with 429/rate-limit — retrying in ${delayMs}ms`,
-          );
-          await new Promise((r) => setTimeout(r, delayMs));
+            if (attempt < attemptsPerModel) {
+              // Overload waves last longer than classic rate-limit windows —
+              // back off in seconds, not milliseconds (capped at 20s so the
+              // request doesn't hang forever).
+              const jitter = Math.floor(Math.random() * 2000);
+              const delayMs = Math.min(
+                Math.max(8000 * attempt + jitter, (retryAfterSec ?? 0) * 1000),
+                20_000,
+              );
+              console.warn(
+                `AI call to ${modelId} hit a transient error — retrying in ${delayMs}ms`,
+              );
+              await new Promise((r) => setTimeout(r, delayMs));
+            }
+          }
         }
+        console.warn(`Model ${modelId} exhausted, trying next model in chain.`);
       }
-      throw new Error("generateWithRetry: exhausted attempts");
+
+      console.warn("All Gemini models failed; using built-in fallback skill template.");
+      return buildFallbackSkillMarkdown({
+        siteName,
+        url,
+        branding,
+        metadata,
+        primaryMarkdown,
+        secondaryMarkdowns,
+      });
     }
 
-    // if we recently saw a Retry-After for this api key, fail fast with guidance
+    // A recent Retry-After cooldown is only advisory now — the retry/fallback
+    // chain below guarantees a result either way.
     const cooldownUntil = apiCooldowns.get(geminiKey as string);
     if (cooldownUntil && Date.now() < cooldownUntil) {
       const sec = Math.ceil((cooldownUntil - Date.now()) / 1000);
-      throw new Error(`AI_RATE_LIMIT: Retry after ${sec}s`);
+      console.warn(`Gemini key is in a Retry-After window (~${sec}s) — proceeding anyway.`);
     }
 
     const siteName =
