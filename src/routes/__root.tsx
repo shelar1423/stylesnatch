@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { FeatureRequestBot } from "@/components/FeatureRequestBot";
+import { Analytics } from "@vercel/analytics/react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -130,6 +131,7 @@ function RootShell({ children }: { children: ReactNode }) {
       <body>
         {children}
         <FeatureRequestBot />
+        <Analytics />
         <Scripts />
       </body>
     </html>
