@@ -29,7 +29,7 @@ function acquireSlot(): Promise<() => void> {
 }
 
 // Very small in-memory cache keyed by URL for dev/testing (10 minute TTL)
-const scanCache = new Map<string, { expires: number; result: any }>();
+const scanCache = new Map<string, { expires: number; result: unknown }>();
 
 const ScanInput = z.object({
   url: z.string().min(1),
@@ -183,7 +183,7 @@ Use this skill when the user asks for a landing page, homepage, or product marke
 }
 
 function shouldUseFallback(err: unknown): boolean {
-  const msg = String((err as any)?.message ?? err ?? "");
+  const msg = String((err as { message?: string })?.message ?? err ?? "");
   return /more credits|insufficient credits|credit|402|401|403|invalid api key|api key|ENOTFOUND|getaddrinfo|connect to api|network|fetch failed|ECONN/i.test(
     msg,
   );
@@ -288,7 +288,7 @@ export const scanSite = createServerFn({ method: "POST" })
             temperature: 0.2,
           });
           return res.text;
-        } catch (err: any) {
+        } catch (err: unknown) {
           console.error("generateText error:", err);
           const msg = String(err?.message ?? err);
           const is429 = /too many requests|rate limit|429|rateLimit/i.test(msg);
@@ -308,31 +308,30 @@ export const scanSite = createServerFn({ method: "POST" })
           // Try to read a Retry-After value if available on common shapes
           let retryAfterSec: number | undefined;
           try {
-            retryAfterSec = Number(
-              err?.headers?.get?.("retry-after") ??
-                err?.response?.headers?.["retry-after"] ??
-                err?.response?.headers?.["Retry-After"],
-            );
+            const header =
+              e?.headers?.get?.("retry-after") ??
+              e?.response?.headers?.["retry-after"] ??
+              e?.response?.headers?.["Retry-After"];
+            retryAfterSec = Number(header);
             if (Number.isNaN(retryAfterSec)) retryAfterSec = undefined;
-          } catch {}
+          } catch {
+            retryAfterSec = undefined;
+          }
 
           if (!is429 || attempt === maxAttempts) {
-            // Re-throw the original error after attempts exhausted or non-retryable
             throw err;
           }
 
-          // If provider sent Retry-After, set a short in-memory cooldown keyed by API key
           try {
             if (retryAfterSec) {
               apiCooldowns.set(openRouterKey as string, Date.now() + retryAfterSec * 1000);
             }
           } catch (e) {
-            // ignore
+            console.error("Failed to set cooldown", e);
           }
 
-          const baseDelay = 500; // ms
+          const baseDelay = 500;
           const expo = Math.pow(2, attempt - 1);
-          // add jitter
           const jitter = Math.floor(Math.random() * 300);
           const delayMs = Math.max(baseDelay * expo + jitter, (retryAfterSec ?? 0) * 1000);
           console.warn(
