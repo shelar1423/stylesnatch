@@ -24,7 +24,9 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          rm package-lock.json
+          npm install
 
       - name: Check Formatting
         run: npm run format:check
