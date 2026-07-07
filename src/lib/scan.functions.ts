@@ -45,13 +45,84 @@ export type ScanResult = {
   skillMarkdown: string;
 };
 
-function normalizeUrl(input: string): string {
+export function normalizeUrl(input: string): string {
   const trimmed = input.trim();
   if (!/^https?:\/\//i.test(trimmed)) return `https://${trimmed}`;
   return trimmed;
 }
 
-function slugFromUrl(u: string): string {
+// Reject obviously invalid input before spending a Firecrawl credit on it.
+export function assertScannableUrl(url: string): void {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error(
+      "That doesn't look like a valid website address. Try something like stripe.com.",
+    );
+  }
+  if (!/^https?:$/.test(parsed.protocol)) {
+    throw new Error("Only http(s) websites can be scanned.");
+  }
+  const host = parsed.hostname;
+  if (!host.includes(".") || host.startsWith(".") || host.endsWith(".")) {
+    throw new Error(`"${host}" isn't a reachable website address. Try something like stripe.com.`);
+  }
+}
+
+// Firecrawl hiccups (rate limits, timeouts, transient 5xx) shouldn't kill a
+// scan outright — retry once before giving up.
+export function isTransientScrapeError(err: unknown): boolean {
+  const msg = String((err as { message?: string })?.message ?? err ?? "");
+  return /\b429\b|too many requests|rate.?limit|\b50[0-9]\b|timeout|timed.?out|ECONNRESET|ETIMEDOUT|socket|fetch failed|network/i.test(
+    msg,
+  );
+}
+
+async function withScrapeRetry<T>(label: string, fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    if (!isTransientScrapeError(err)) throw err;
+    console.warn(`${label} hit a transient error — retrying once in 3s:`, err);
+    await new Promise((r) => setTimeout(r, 3000));
+    return fn();
+  }
+}
+
+// Translate raw scrape failures into messages a user can act on.
+export function friendlyScrapeError(url: string, err: unknown): Error {
+  const msg = String((err as { message?: string })?.message ?? err ?? "");
+  if (/402|payment|insufficient credits|no credits/i.test(msg)) {
+    return new Error(
+      "Firecrawl credits are exhausted. Top up your Firecrawl account and try again.",
+    );
+  }
+  if (/403|forbidden|blocked|robots/i.test(msg)) {
+    return new Error(`${url} blocks automated scraping, so it can't be scanned.`);
+  }
+  if (/404|not found|DNS|ENOTFOUND|could not resolve/i.test(msg)) {
+    return new Error(`${url} doesn't seem to exist or isn't reachable. Double-check the address.`);
+  }
+  if (/429|rate limit/i.test(msg)) {
+    return new Error("The scraper is rate-limited right now. Wait a minute and try again.");
+  }
+  return new Error(`Couldn't scan ${url}: ${msg.slice(0, 160)}`);
+}
+
+// Models sometimes wrap the file in a code fence or add a line of preamble
+// despite instructions. Strip that so the download is always clean,
+// frontmatter-first markdown.
+export function sanitizeSkillMarkdown(raw: string): string {
+  let md = raw.trim();
+  const fence = md.match(/^```(?:markdown|md)?\s*\n([\s\S]*?)\n```\s*$/);
+  if (fence) md = fence[1].trim();
+  const fmIdx = md.indexOf("---\n");
+  if (fmIdx > 0 && fmIdx < 200) md = md.slice(fmIdx);
+  return md;
+}
+
+export function slugFromUrl(u: string): string {
   try {
     const host = new URL(u).hostname.replace(/^www\./, "");
     return host.replace(/[^a-z0-9]+/gi, "-").toLowerCase();
@@ -69,7 +140,7 @@ const VALUE_PATH =
 
 // Each secondary page costs a Firecrawl credit, so pick a few high-value
 // same-origin pages rather than the first N links we happen to find.
-function selectSecondaryUrls(baseUrl: string, links: string[], max: number): string[] {
+export function selectSecondaryUrls(baseUrl: string, links: string[], max: number): string[] {
   if (max <= 0) return [];
   let origin = "";
   try {
@@ -107,7 +178,7 @@ function selectSecondaryUrls(baseUrl: string, links: string[], max: number): str
 
 // When the homepage + branding already carry the palette, fonts, and enough
 // copy, we can scrape fewer secondary pages without hurting quality.
-function brandingIsRich(branding: BrandingPayload | null, markdown: string): boolean {
+export function brandingIsRich(branding: BrandingPayload | null, markdown: string): boolean {
   const colorCount = Object.values(branding?.colors ?? {}).filter(Boolean).length;
   const hasFonts = (branding?.fonts ?? []).some((f) => Boolean(f?.family));
   return colorCount >= 4 && hasFonts && markdown.length > 6000;
@@ -332,7 +403,7 @@ const GEMINI_MODEL_CHAIN = Array.from(
 
 // A SKILL.md is only useful if an agent can build from it without guessing.
 // These checks catch the thin output weaker fallback models tend to produce.
-function skillQualityIssues(md: string): string[] {
+export function skillQualityIssues(md: string): string[] {
   const issues: string[] = [];
   if (md.length < 4500) {
     issues.push("the file is too short — every section needs concrete, copy-pastable detail");
@@ -358,230 +429,259 @@ ${issues.map((i) => `- ${i}`).join("\n")}
 Rewrite the COMPLETE SKILL.md file. Keep everything that is already good and expand every section with concrete, copy-pastable specifics: hex values, px/rem sizes, font weights, exact CSS/Tailwind class suggestions, and verbatim copy examples from the scraped content. Return ONLY the raw markdown of the full file, no preamble.`;
 }
 
+// Concurrent scans of the same URL (double-clicks, duplicated effects in dev)
+// share one promise instead of scraping — and paying — twice.
+const inFlightScans = new Map<string, Promise<ScanResult>>();
+
 export const scanSite = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ScanInput.parse(input))
   .handler(async ({ data }): Promise<ScanResult> => {
     const url = normalizeUrl(data.url);
-    const firecrawlKey = process.env.FIRECRAWL_API_KEY ?? process.env.VITE_FIRECRAWL_API_KEY;
-    const geminiKey = process.env.GEMINI_API_KEY ?? process.env.VITE_GEMINI_API_KEY;
+    assertScannableUrl(url);
 
-    if (!firecrawlKey)
-      throw new Error("Firecrawl is not connected. Set FIRECRAWL_API_KEY in your environment.");
-    if (!geminiKey) {
-      console.warn(
-        "Gemini API key is not configured; the built-in fallback skill template will be used.",
-      );
+    const existing = inFlightScans.get(url);
+    if (existing) return existing;
+
+    const scan = runScan(url).finally(() => inFlightScans.delete(url));
+    inFlightScans.set(url, scan);
+    return scan;
+  });
+
+async function runScan(url: string): Promise<ScanResult> {
+  const firecrawlKey = process.env.FIRECRAWL_API_KEY ?? process.env.VITE_FIRECRAWL_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY ?? process.env.VITE_GEMINI_API_KEY;
+
+  if (!firecrawlKey)
+    throw new Error("Firecrawl is not connected. Set FIRECRAWL_API_KEY in your environment.");
+  if (!geminiKey) {
+    console.warn(
+      "Gemini API key is not configured; the built-in fallback skill template will be used.",
+    );
+  }
+
+  // Scrape-derived inputs, served from cache when possible so retries and
+  // repeat scans of the same URL don't re-spend Firecrawl credits.
+  let primaryMarkdown: string;
+  let screenshot: string | null;
+  let branding: BrandingPayload | null;
+  let metadata: Record<string, string>;
+  let secondaryMarkdowns: Array<{ url: string; markdown: string }>;
+
+  const cached = scrapeCache.get(url);
+  if (cached && Date.now() < cached.expires) {
+    ({ primaryMarkdown, screenshot, branding, metadata, secondaryMarkdowns } = cached);
+    console.log(`Firecrawl cache hit for ${url} — skipping scrape (0 credits spent).`);
+  } else {
+    const { default: Firecrawl } = await import("@mendable/firecrawl-js");
+    const firecrawl = new Firecrawl({ apiKey: firecrawlKey });
+
+    // 1) Primary scrape: branding + markdown + screenshot + links (1 credit)
+    let primary: Record<string, unknown>;
+    try {
+      primary = (await withScrapeRetry(
+        `primary scrape of ${url}`,
+        () =>
+          firecrawl.scrape(url, {
+            formats: ["markdown", "screenshot", "links", "branding"],
+            onlyMainContent: false,
+          }) as Promise<Record<string, unknown>>,
+      )) as Record<string, unknown>;
+    } catch (err) {
+      console.error(`primary scrape of ${url} failed:`, err);
+      throw friendlyScrapeError(url, err);
     }
 
-    // Scrape-derived inputs, served from cache when possible so retries and
-    // repeat scans of the same URL don't re-spend Firecrawl credits.
-    let primaryMarkdown: string;
-    let screenshot: string | null;
-    let branding: BrandingPayload | null;
-    let metadata: Record<string, string>;
-    let secondaryMarkdowns: Array<{ url: string; markdown: string }>;
+    primaryMarkdown =
+      (primary.markdown as string | undefined) ??
+      (primary.data as { markdown?: string } | undefined)?.markdown ??
+      "";
+    screenshot =
+      (primary.screenshot as string | undefined) ??
+      (primary.data as { screenshot?: string } | undefined)?.screenshot ??
+      null;
+    branding =
+      (primary.branding as BrandingPayload | undefined) ??
+      (primary.data as { branding?: BrandingPayload } | undefined)?.branding ??
+      null;
+    metadata =
+      (primary.metadata as Record<string, string> | undefined) ??
+      (primary.data as { metadata?: Record<string, string> } | undefined)?.metadata ??
+      {};
+    const links: string[] =
+      (primary.links as string[] | undefined) ??
+      (primary.data as { links?: string[] } | undefined)?.links ??
+      [];
 
-    const cached = scrapeCache.get(url);
-    if (cached && Date.now() < cached.expires) {
-      ({ primaryMarkdown, screenshot, branding, metadata, secondaryMarkdowns } = cached);
-      console.log(`Firecrawl cache hit for ${url} — skipping scrape (0 credits spent).`);
-    } else {
-      const { default: Firecrawl } = await import("@mendable/firecrawl-js");
-      const firecrawl = new Firecrawl({ apiKey: firecrawlKey });
+    // 2) Scrape a few high-value same-origin pages for richer coverage.
+    //    Each page costs 1 credit, so cap the count (fewer when the homepage
+    //    is already rich) and skip junk pages (login/legal/etc.).
+    secondaryMarkdowns = [];
+    const maxSecondary = brandingIsRich(branding, primaryMarkdown) ? 2 : 3;
+    const secondaryUrls = selectSecondaryUrls(url, links, maxSecondary);
 
-      // 1) Primary scrape: branding + markdown + screenshot + links (1 credit)
-      const primary = (await firecrawl.scrape(url, {
-        formats: ["markdown", "screenshot", "links", "branding"],
-        onlyMainContent: false,
-      })) as Record<string, unknown>;
-
-      primaryMarkdown =
-        (primary.markdown as string | undefined) ??
-        (primary.data as { markdown?: string } | undefined)?.markdown ??
-        "";
-      screenshot =
-        (primary.screenshot as string | undefined) ??
-        (primary.data as { screenshot?: string } | undefined)?.screenshot ??
-        null;
-      branding =
-        (primary.branding as BrandingPayload | undefined) ??
-        (primary.data as { branding?: BrandingPayload } | undefined)?.branding ??
-        null;
-      metadata =
-        (primary.metadata as Record<string, string> | undefined) ??
-        (primary.data as { metadata?: Record<string, string> } | undefined)?.metadata ??
-        {};
-      const links: string[] =
-        (primary.links as string[] | undefined) ??
-        (primary.data as { links?: string[] } | undefined)?.links ??
-        [];
-
-      // 2) Scrape a few high-value same-origin pages for richer coverage.
-      //    Each page costs 1 credit, so cap the count (fewer when the homepage
-      //    is already rich) and skip junk pages (login/legal/etc.).
-      secondaryMarkdowns = [];
-      const maxSecondary = brandingIsRich(branding, primaryMarkdown) ? 2 : 3;
-      const secondaryUrls = selectSecondaryUrls(url, links, maxSecondary);
-
-      if (secondaryUrls.length > 0) {
-        try {
-          const batch = (await firecrawl.batchScrape(secondaryUrls, {
-            options: { formats: ["markdown"], onlyMainContent: true },
-          })) as unknown as Record<string, unknown>;
-          const items =
-            (batch.data as Array<Record<string, unknown>> | undefined) ??
-            (Array.isArray(batch) ? (batch as Array<Record<string, unknown>>) : []);
-          for (const item of items) {
-            const md = (item.markdown as string | undefined) ?? "";
-            const meta = item.metadata as { sourceURL?: string } | undefined;
-            if (md && meta?.sourceURL) {
-              secondaryMarkdowns.push({ url: meta.sourceURL, markdown: md.slice(0, 4000) });
-            }
+    if (secondaryUrls.length > 0) {
+      try {
+        const batch = (await withScrapeRetry(
+          `secondary batchScrape for ${url}`,
+          () =>
+            firecrawl.batchScrape(secondaryUrls, {
+              options: { formats: ["markdown"], onlyMainContent: true },
+            }) as Promise<unknown>,
+        )) as Record<string, unknown>;
+        const items =
+          (batch.data as Array<Record<string, unknown>> | undefined) ??
+          (Array.isArray(batch) ? (batch as Array<Record<string, unknown>>) : []);
+        for (const item of items) {
+          const md = (item.markdown as string | undefined) ?? "";
+          const meta = item.metadata as { sourceURL?: string } | undefined;
+          if (md && meta?.sourceURL) {
+            secondaryMarkdowns.push({ url: meta.sourceURL, markdown: md.slice(0, 4000) });
           }
-        } catch (err) {
-          console.warn("secondary batchScrape failed", err);
         }
+      } catch (err) {
+        console.warn("secondary batchScrape failed", err);
       }
-
-      scrapeCache.set(url, {
-        expires: Date.now() + SCRAPE_CACHE_TTL_MS,
-        primaryMarkdown,
-        screenshot,
-        branding,
-        metadata,
-        secondaryMarkdowns,
-      });
     }
 
-    // 3) Ask Gemini to synthesize a SKILL.md
-    const { createGeminiGatewayProvider } = await import("./ai-gateway.server");
-    const { generateText } = await import("ai");
+    scrapeCache.set(url, {
+      expires: Date.now() + SCRAPE_CACHE_TTL_MS,
+      primaryMarkdown,
+      screenshot,
+      branding,
+      metadata,
+      secondaryMarkdowns,
+    });
+  }
 
-    const gateway = createGeminiGatewayProvider(geminiKey as string);
+  // 3) Ask Gemini to synthesize a SKILL.md
+  const { createGeminiGatewayProvider } = await import("./ai-gateway.server");
+  const { generateText } = await import("ai");
 
-    // Never throws: walks the model chain retrying transient errors, and if
-    // every model fails, returns the built-in fallback template.
-    async function generateWithRetry(prompt: string) {
-      const attemptsPerModel = 2;
+  const gateway = createGeminiGatewayProvider(geminiKey as string);
 
-      for (const modelId of GEMINI_MODEL_CHAIN) {
-        const model = gateway(modelId);
+  // Never throws: walks the model chain retrying transient errors, and if
+  // every model fails, returns the built-in fallback template.
+  async function generateWithRetry(prompt: string) {
+    const attemptsPerModel = 2;
 
-        for (let attempt = 1; attempt <= attemptsPerModel; attempt++) {
+    for (const modelId of GEMINI_MODEL_CHAIN) {
+      const model = gateway(modelId);
+
+      for (let attempt = 1; attempt <= attemptsPerModel; attempt++) {
+        try {
+          const res = await generateText({
+            model,
+            prompt,
+            temperature: 0.2,
+            // Keep the AI SDK's internal retry short — backoff and model
+            // switching are handled here where we control the timing.
+            maxRetries: 1,
+          });
+
+          const draft = sanitizeSkillMarkdown(res.text);
+          const issues = skillQualityIssues(draft);
+          if (issues.length === 0) return draft;
+
+          // Weaker fallback models tend to produce thin files. One repair
+          // pass asking the same model to expand usually closes the gap.
+          console.warn(
+            `SKILL.md draft from ${modelId} is thin (${issues.join("; ")}) — running one expansion pass.`,
+          );
           try {
-            const res = await generateText({
+            const repaired = await generateText({
               model,
-              prompt,
+              prompt: buildExpandPrompt(prompt, draft, issues),
               temperature: 0.2,
-              // Keep the AI SDK's internal retry short — backoff and model
-              // switching are handled here where we control the timing.
               maxRetries: 1,
             });
+            const repairedDraft = sanitizeSkillMarkdown(repaired.text);
+            if (skillQualityIssues(repairedDraft).length < issues.length) {
+              return repairedDraft;
+            }
+          } catch (repairErr) {
+            console.warn("Expansion pass failed; keeping the original draft.", repairErr);
+          }
+          return draft;
+        } catch (err: unknown) {
+          console.error(`generateText error (${modelId}, attempt ${attempt}):`, err);
 
-            const issues = skillQualityIssues(res.text);
-            if (issues.length === 0) return res.text;
+          // Auth / billing / network errors won't heal by switching models.
+          if (shouldUseFallback(err)) {
+            console.warn("Gemini unavailable, using built-in fallback skill template.");
+            return buildFallbackSkillMarkdown({
+              siteName,
+              url,
+              branding,
+              metadata,
+              primaryMarkdown,
+              secondaryMarkdowns,
+            });
+          }
 
-            // Weaker fallback models tend to produce thin files. One repair
-            // pass asking the same model to expand usually closes the gap.
-            console.warn(
-              `SKILL.md draft from ${modelId} is thin (${issues.join("; ")}) — running one expansion pass.`,
+          // Unknown (non-transient) errors: don't burn time retrying the
+          // same model, but do give the rest of the chain a chance.
+          if (!isTransientAiError(err)) break;
+
+          // Try to read a Retry-After value if available on common shapes
+          let retryAfterSec: number | undefined;
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const e = err as any;
+            const header =
+              e?.headers?.get?.("retry-after") ??
+              e?.response?.headers?.["retry-after"] ??
+              e?.response?.headers?.["Retry-After"];
+            retryAfterSec = Number(header);
+            if (Number.isNaN(retryAfterSec)) retryAfterSec = undefined;
+          } catch {
+            retryAfterSec = undefined;
+          }
+
+          if (retryAfterSec) {
+            apiCooldowns.set(geminiKey as string, Date.now() + retryAfterSec * 1000);
+          }
+
+          if (attempt < attemptsPerModel) {
+            // Overload waves last longer than classic rate-limit windows —
+            // back off in seconds, not milliseconds (capped at 20s so the
+            // request doesn't hang forever).
+            const jitter = Math.floor(Math.random() * 2000);
+            const delayMs = Math.min(
+              Math.max(8000 * attempt + jitter, (retryAfterSec ?? 0) * 1000),
+              20_000,
             );
-            try {
-              const repaired = await generateText({
-                model,
-                prompt: buildExpandPrompt(prompt, res.text, issues),
-                temperature: 0.2,
-                maxRetries: 1,
-              });
-              if (skillQualityIssues(repaired.text).length < issues.length) {
-                return repaired.text;
-              }
-            } catch (repairErr) {
-              console.warn("Expansion pass failed; keeping the original draft.", repairErr);
-            }
-            return res.text;
-          } catch (err: unknown) {
-            console.error(`generateText error (${modelId}, attempt ${attempt}):`, err);
-
-            // Auth / billing / network errors won't heal by switching models.
-            if (shouldUseFallback(err)) {
-              console.warn("Gemini unavailable, using built-in fallback skill template.");
-              return buildFallbackSkillMarkdown({
-                siteName,
-                url,
-                branding,
-                metadata,
-                primaryMarkdown,
-                secondaryMarkdowns,
-              });
-            }
-
-            // Unknown (non-transient) errors: don't burn time retrying the
-            // same model, but do give the rest of the chain a chance.
-            if (!isTransientAiError(err)) break;
-
-            // Try to read a Retry-After value if available on common shapes
-            let retryAfterSec: number | undefined;
-            try {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const e = err as any;
-              const header =
-                e?.headers?.get?.("retry-after") ??
-                e?.response?.headers?.["retry-after"] ??
-                e?.response?.headers?.["Retry-After"];
-              retryAfterSec = Number(header);
-              if (Number.isNaN(retryAfterSec)) retryAfterSec = undefined;
-            } catch {
-              retryAfterSec = undefined;
-            }
-
-            if (retryAfterSec) {
-              apiCooldowns.set(geminiKey as string, Date.now() + retryAfterSec * 1000);
-            }
-
-            if (attempt < attemptsPerModel) {
-              // Overload waves last longer than classic rate-limit windows —
-              // back off in seconds, not milliseconds (capped at 20s so the
-              // request doesn't hang forever).
-              const jitter = Math.floor(Math.random() * 2000);
-              const delayMs = Math.min(
-                Math.max(8000 * attempt + jitter, (retryAfterSec ?? 0) * 1000),
-                20_000,
-              );
-              console.warn(
-                `AI call to ${modelId} hit a transient error — retrying in ${delayMs}ms`,
-              );
-              await new Promise((r) => setTimeout(r, delayMs));
-            }
+            console.warn(`AI call to ${modelId} hit a transient error — retrying in ${delayMs}ms`);
+            await new Promise((r) => setTimeout(r, delayMs));
           }
         }
-        console.warn(`Model ${modelId} exhausted, trying next model in chain.`);
       }
-
-      console.warn("All Gemini models failed; using built-in fallback skill template.");
-      return buildFallbackSkillMarkdown({
-        siteName,
-        url,
-        branding,
-        metadata,
-        primaryMarkdown,
-        secondaryMarkdowns,
-      });
+      console.warn(`Model ${modelId} exhausted, trying next model in chain.`);
     }
 
-    // A recent Retry-After cooldown is only advisory now — the retry/fallback
-    // chain below guarantees a result either way.
-    const cooldownUntil = apiCooldowns.get(geminiKey as string);
-    if (cooldownUntil && Date.now() < cooldownUntil) {
-      const sec = Math.ceil((cooldownUntil - Date.now()) / 1000);
-      console.warn(`Gemini key is in a Retry-After window (~${sec}s) — proceeding anyway.`);
-    }
+    console.warn("All Gemini models failed; using built-in fallback skill template.");
+    return buildFallbackSkillMarkdown({
+      siteName,
+      url,
+      branding,
+      metadata,
+      primaryMarkdown,
+      secondaryMarkdowns,
+    });
+  }
 
-    const siteName =
-      metadata.title || metadata["og:title"] || new URL(url).hostname.replace(/^www\./, "");
-    const slug = slugFromUrl(url);
+  // A recent Retry-After cooldown is only advisory now — the retry/fallback
+  // chain below guarantees a result either way.
+  const cooldownUntil = apiCooldowns.get(geminiKey as string);
+  if (cooldownUntil && Date.now() < cooldownUntil) {
+    const sec = Math.ceil((cooldownUntil - Date.now()) / 1000);
+    console.warn(`Gemini key is in a Retry-After window (~${sec}s) — proceeding anyway.`);
+  }
 
-    const prompt = `You are a senior design engineer. Analyze the website below and produce a SINGLE, self-contained SKILL.md file that another AI agent (Claude Code, Codex, Cursor, etc.) can load to *faithfully replicate the visual style and vibe* of this site when building new pages or components.
+  const siteName =
+    metadata.title || metadata["og:title"] || new URL(url).hostname.replace(/^www\./, "");
+  const slug = slugFromUrl(url);
+
+  const prompt = `You are a senior design engineer. Analyze the website below and produce a SINGLE, self-contained SKILL.md file that another AI agent (Claude Code, Codex, Cursor, etc.) can load to *faithfully replicate the visual style and vibe* of this site when building new pages or components.
 
 SITE: ${siteName}
 URL: ${url}
@@ -660,15 +760,15 @@ Depth requirements (non-negotiable — thin output is a failure):
 - Never write "varies", "unknown", or "it depends" — if a value is not directly visible, infer a specific plausible value and state it confidently.
 - Acid test: an agent given ONLY this file and the prompt "build a landing page" must produce a page that looks unmistakably like ${siteName}. Every decision it needs must be answered here.`;
 
-    const skillMarkdown = await generateWithRetry(prompt);
+  const skillMarkdown = await generateWithRetry(prompt);
 
-    return {
-      url,
-      title: metadata.title || metadata["og:title"] || siteName,
-      description: metadata.description || "",
-      screenshot,
-      branding,
-      pagesScanned: 1 + secondaryMarkdowns.length,
-      skillMarkdown,
-    };
-  });
+  return {
+    url,
+    title: metadata.title || metadata["og:title"] || siteName,
+    description: metadata.description || "",
+    screenshot,
+    branding,
+    pagesScanned: 1 + secondaryMarkdowns.length,
+    skillMarkdown,
+  };
+}
