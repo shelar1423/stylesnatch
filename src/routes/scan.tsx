@@ -48,7 +48,6 @@ function ScanPage() {
   const { url } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const [result, setResult] = useState<ScanResult | null>(null);
-  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
   const resultSectionRef = useRef<HTMLDivElement | null>(null);
   const scan = useServerFn(scanSite);
 
@@ -59,30 +58,27 @@ function ScanPage() {
     },
     onError: (err: unknown) => {
       const message = err instanceof Error ? err.message : "Something went wrong";
-      const match = message.match(/AI_RATE_LIMIT: Retry after (\d+)s/i);
-      const friendly = match
-        ? `Rate limit reached — try again in ${match[1]}s or check your OPENROUTER_API_KEY/quota.`
-        : /too many requests|rate limit|429/i.test(message)
-          ? "Rate limit reached from the AI provider (Too Many Requests). Try again in a minute or check your OPENROUTER_API_KEY/quota."
-          : message;
-      toast.error("Scan failed", { description: friendly });
-      if (match) {
-        const sec = Number(match[1]);
-        const until = Date.now() + sec * 1000;
-        setCooldownUntil(until);
-        setTimeout(() => setCooldownUntil(null), sec * 1000 + 500);
-      }
+      toast.error("Scan failed", { description: message });
     },
   });
 
   const isScanning = mutation.isPending;
-  const isCooling = !!(cooldownUntil && Date.now() < cooldownUntil);
 
   useEffect(() => {
-    if (url && !result && !isScanning && !isCooling) {
+    // Kick off a scan only when the target URL changes. The guard reads the
+    // latest mutation/result state, but they intentionally aren't deps — we
+    // don't want re-running this effect to trigger a second scan.
+    if (url && !result && !isScanning) {
       mutation.mutate(url);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
+
+  const errorMessage = mutation.isError
+    ? mutation.error instanceof Error
+      ? mutation.error.message
+      : "Something went wrong"
+    : null;
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
@@ -91,7 +87,16 @@ function ScanPage() {
       <Nav />
       <main className="relative pt-12 pb-24">
         <AnimatePresence mode="wait">
-          {isScanning || (!result && !isScanning) ? (
+          {result ? (
+            <motion.div
+              key="result"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mx-auto max-w-6xl px-6 sm:px-8"
+            >
+              <ResultView result={result} innerRef={resultSectionRef} />
+            </motion.div>
+          ) : isScanning ? (
             <motion.div
               key="scanning"
               initial={{ opacity: 0, y: 20 }}
@@ -101,19 +106,93 @@ function ScanPage() {
             >
               <ScanningState url={url} />
             </motion.div>
-          ) : result ? (
+          ) : errorMessage ? (
             <motion.div
-              key="result"
-              initial={{ opacity: 0, y: 40 }}
+              key="error"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="mx-auto max-w-6xl px-6 sm:px-8"
+            >
+              <ErrorState
+                url={url}
+                message={errorMessage}
+                onRetry={() => mutation.mutate(url)}
+                onNewScan={() => navigate({ to: "/" })}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="mx-auto max-w-6xl px-6 sm:px-8"
             >
-              <ResultView result={result} innerRef={resultSectionRef} />
+              {url ? (
+                <ScanningState url={url} />
+              ) : (
+                <ErrorState
+                  url=""
+                  message="No website address was provided."
+                  onRetry={null}
+                  onNewScan={() => navigate({ to: "/" })}
+                />
+              )}
             </motion.div>
-          ) : null}
+          )}
         </AnimatePresence>
       </main>
     </div>
+  );
+}
+
+function ErrorState({
+  url,
+  message,
+  onRetry,
+  onNewScan,
+}: {
+  url: string;
+  message: string;
+  onRetry: (() => void) | null;
+  onNewScan: () => void;
+}) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.4 }}
+      className="mt-20"
+    >
+      <div className="mx-auto max-w-2xl rounded-3xl border border-border/70 bg-card/90 p-8 text-center backdrop-blur shadow-[0_30px_80px_-40px_oklch(0.2_0.02_60_/_0.4)]">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+          <Globe className="h-6 w-6 text-destructive" />
+        </div>
+        <h2 className="mt-5 font-display text-2xl leading-tight">Scan failed</h2>
+        {url ? (
+          <div className="mt-1 font-mono text-xs text-muted-foreground truncate">{url}</div>
+        ) : null}
+        <p className="mx-auto mt-4 max-w-md text-sm text-muted-foreground">{message}</p>
+        <div className="mt-8 flex items-center justify-center gap-3">
+          {onRetry ? (
+            <button
+              onClick={onRetry}
+              className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-transform hover:scale-[1.02]"
+            >
+              <ArrowRight className="h-4 w-4" />
+              Try again
+            </button>
+          ) : null}
+          <button
+            onClick={onNewScan}
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2.5 text-sm font-medium hover:bg-secondary"
+          >
+            Scan a different site
+          </button>
+        </div>
+      </div>
+    </motion.section>
   );
 }
 
@@ -155,14 +234,16 @@ function ScanningState({ url }: { url: string }) {
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
+    // Advance through the steps but hold on the last one — scans take
+    // 20-40s and a looping "100% -> 20%" bar reads as broken.
     const interval = window.setInterval(() => {
-      setCurrentStep((prev) => (prev + 1) % SCAN_STEPS.length);
-    }, 1400);
+      setCurrentStep((prev) => Math.min(prev + 1, SCAN_STEPS.length - 1));
+    }, 3500);
 
     return () => window.clearInterval(interval);
   }, []);
 
-  const progress = ((currentStep + 1) / SCAN_STEPS.length) * 100;
+  const progress = Math.min(((currentStep + 1) / SCAN_STEPS.length) * 100, 90);
 
   return (
     <motion.section
